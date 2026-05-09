@@ -14,7 +14,7 @@ shifts
 ## Target
 
 The `bound` field of `RuelleAnalyticClusterHypotheses Wfn n m`: there exist
-constants `C > 0`, `N : ℕ`, `R > 0` such that for every pair of forward-tube
+constants `C > 0`, `N M : ℕ`, `R > 0` such that for every pair of forward-tube
 configurations `z₁ ∈ ForwardTube d n`, `z₂ ∈ ForwardTube d m`, every real
 spatial shift `a` (`a 0 = 0`) with squared spatial norm exceeding `R^2`, and
 under the hypothesis that the joint configuration `(z₁, z₂ + (0, a))` lies
@@ -22,7 +22,13 @@ in the analytic domain `PermutedExtendedTube d (n + m)`,
 ```
 ‖(W_analytic_BHW Wfn (n + m)).val (Fin.append z₁ (z₂ + (0, a)))‖
     ≤ C · (1 + ‖z₁‖ + ‖z₂‖) ^ N
+        · (1 + (tubeBoundaryDist z₁)⁻¹) ^ M
+        · (1 + (tubeBoundaryDist z₂)⁻¹) ^ M
 ```
+The boundary-distance regulator `(1 + (tubeBoundaryDist z)⁻¹)^M` matches
+Streater-Wightman Theorem 3.1.1; the unregulated form was found vacuous
+during the PR-#86 vetting (free-field counterexample;
+see `docs/ruelle_bound_vacuity_concern.md`).
 with `C, N` independent of `a`.
 
 This is Ruelle 1962 Theorem 2 / Araki-Hepp-Ruelle 1962 / Streater-Wightman §3.4.

@@ -13,18 +13,14 @@ import Mathlib.MeasureTheory.Measure.Decomposition.IntegralRNDeriv
 /-!
 # L5: Spectral Riemann-Lebesgue lemma for tempered measures with AC spatial marginal
 
-**Status (2026-05-07): inventoried frontier lemma.** This is a pure
-measure-theoretic / Fourier-analytic statement (NOT QFT-specific):
-Riemann-Lebesgue for finite measures on `Fin (d+1) → ℝ` whose spatial
-marginal is absolutely continuous w.r.t. Lebesgue.
+**Status (2026-05-09): fully PROVED.** Pure measure-theoretic /
+Fourier-analytic statement (NOT QFT-specific): Riemann-Lebesgue for
+finite measures on `Fin (d+1) → ℝ` whose spatial marginal is
+absolutely continuous w.r.t. Lebesgue.
 
-Per PR #82 review (xiyin137): this file is acceptable as production
-proof debt because:
-* The statement is pure FA / measure theory, with no Wightman or BHW
-  dependence.
-* Substantial progress is already proved (steps 1, 2, 3a; see below).
-* The remaining sub-steps (3b–e) reduce to standard Mathlib bridging
-  via `EuclideanSpace ℝ (Fin d)` plus convention reconciliation.
+`#print axioms spectral_riemann_lebesgue` reports
+`[propext, Classical.choice, Quot.sound]` — Mathlib core only, no
+project axioms, no `sorryAx`.
 
 For a finite Borel measure `μ` on `(Fin (d+1) → ℝ)` whose **spatial marginal**
 (the pushforward under projection onto coordinates `i ≥ 1`) is absolutely
@@ -47,14 +43,21 @@ Tendsto (a ↦ ∫ exp(i a · p⃗) dμ(p)) (cobounded) (𝓝 0)
 5. Reconcile the inner-product / Fourier-character convention to match
    our `Complex.exp (Complex.I * ⟨a, q⟩)` form.
 
-## Status of steps
+## Status of steps (all PROVED, 2026-05-09)
 
-* Step 1 (change of variables via spatial projection): **PROVED**.
-* Step 2 (Radon-Nikodym density reduction): **PROVED**.
-* Step 3a (integrability of the density): **PROVED**.
-* Steps 3b–e (Mathlib RL bridging on EuclideanSpace + convention
-  reconciliation + cocompact↔cobounded): single sorry with concrete
-  Mathlib targets. ~1 active day estimated remaining.
+* Step 1 (change of variables via spatial projection): proved via
+  `MeasureTheory.integral_map`.
+* Step 2 (Radon-Nikodym density reduction): proved via
+  `MeasureTheory.integral_rnDeriv_smul`.
+* Step 3a (integrability of the density): proved via
+  `Measure.integrable_toReal_rnDeriv`.
+* Step 3b (transport to `EuclideanSpace ℝ (Fin d)`): proved via
+  `PiLp.continuous_toLp` and `PiLp.volume_preserving_toLp`.
+* Step 3c–d (apply Mathlib RL): proved via
+  `tendsto_integral_exp_inner_smul_cocompact` on the affine map
+  `aff_map a := -((2 * π)⁻¹) • toLp a`.
+* Step 3e (cocompact ↔ cobounded): proved via
+  `Homeomorph.toCocompactMap` + `Metric.cobounded_eq_cocompact`.
 -/
 
 set_option backward.isDefEq.respectTransparency false
