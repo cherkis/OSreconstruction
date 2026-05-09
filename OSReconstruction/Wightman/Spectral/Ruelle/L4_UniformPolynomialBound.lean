@@ -29,7 +29,7 @@ The boundary-distance regulator `(1 + (tubeBoundaryDist z)⁻¹)^M` matches
 Streater-Wightman Theorem 3.1.1; the unregulated form was found vacuous
 during the PR-#86 vetting (free-field counterexample;
 see `docs/ruelle_bound_vacuity_concern.md`).
-with `C, N` independent of `a`.
+with `C, N, M` independent of `a`.
 
 This is Ruelle 1962 Theorem 2 / Araki-Hepp-Ruelle 1962 / Streater-Wightman §3.4.
 
