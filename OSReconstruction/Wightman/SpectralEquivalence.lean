@@ -2083,9 +2083,12 @@ private lemma physicsFourierFlatCLM_flatten_fourierTransform_rescale
       intro k
       exact (hBHWcone_iff (η k)).1 (by simpa [C, BHW.ProductForwardConeReal] using hη k)
     simpa [Wclm] using hF_bv φ η hη'
+  -- Convert global → compact-subset growth (Vladimirov H(T^C) hypothesis form).
+  have hF_growth_compact :=
+    hasCompactSubsetGrowth_of_global_polyGrowth C F hF_growth'
   obtain ⟨Tflat, hTflat_support, hTflat_eq⟩ :=
     bv_implies_fourier_support C hC_open hC_conv hC_cone hC_salient
-      F hF_holo' hF_growth' Wclm hF_bv'
+      F hF_holo' hF_growth_compact Wclm hF_bv'
   intro φ hφ
   have hvanish :
       w (φ.fourierTransform) = 0 := by
