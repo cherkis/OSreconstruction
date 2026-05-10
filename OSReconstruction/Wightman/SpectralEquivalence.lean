@@ -1202,6 +1202,49 @@ def ForwardTubeAnalyticity
           (nhdsWithin 0 (Set.Ioi 0))
           (nhds (W n f)))
 
+/-- **Forward tube analyticity condition with Vladimirov H(T^C) compact-subset
+    growth.**
+
+    Same as `ForwardTubeAnalyticity` except the polynomial-growth clause is
+    replaced by the textbook Streater-Wightman 3.1.1 / Vladimirov 25.1
+    compact-subset form: for every compact subset `K` of the forward cone,
+    polynomial growth in the real part `x` uniform over imaginary parts
+    `y ∈ K`.
+
+    **Why this exists alongside `ForwardTubeAnalyticity`**: the older global
+    polynomial bound `‖W_analytic z‖ ≤ C(1+‖z‖)^N` over the entire tube is
+    **unsatisfiable** for any actual Wightman QFT (free-field counterexample:
+    internal `1/(z-w)²` blow-up as imaginary differences approach `∂V+`; see
+    `docs/ruelle_bound_vacuity_concern.md`). The compact-subset form is what
+    Vladimirov 25.1 actually requires and is satisfiable for free fields.
+
+    **Use this for new material.** New axioms / theorems that need a
+    polynomial growth hypothesis on the analytic continuation should consume
+    this (or equivalently the new `WightmanFunctions.spectrum_condition_compact_subset`
+    field), not the over-strong global form. The older `ForwardTubeAnalyticity`
+    is retained for backward compatibility with consumers that haven't been
+    migrated. -/
+def ForwardTubeAnalyticityCompactSubset
+    (W : (n : ℕ) → SchwartzNPointSpace d n → ℂ) : Prop :=
+  ∀ (n : ℕ),
+    ∃ (W_analytic : (Fin n → Fin (d + 1) → ℂ) → ℂ),
+      DifferentiableOn ℂ W_analytic (ForwardTube d n) ∧
+      -- Compact-subset polynomial growth (Vladimirov H(T^C)).
+      (∀ (K : Set (Fin n → Fin (d + 1) → ℝ)), IsCompact K →
+        K ⊆ ForwardConeAbs d n →
+          ∃ (C_bd : ℝ) (N : ℕ), C_bd > 0 ∧
+            ∀ (x y : Fin n → Fin (d + 1) → ℝ), y ∈ K →
+              ‖W_analytic (fun k μ => (x k μ : ℂ) + (y k μ : ℂ) * Complex.I)‖ ≤
+                C_bd * (1 + ‖x‖) ^ N) ∧
+      -- Boundary values (same as ForwardTubeAnalyticity).
+      (∀ (f : SchwartzNPointSpace d n) (η : Fin n → Fin (d + 1) → ℝ),
+        InForwardCone d n η →
+        Filter.Tendsto
+          (fun ε : ℝ => ∫ x : NPointSpacetime d n,
+            W_analytic (fun k μ => ↑(x k μ) + ε * ↑(η k μ) * Complex.I) * (f x))
+          (nhdsWithin 0 (Set.Ioi 0))
+          (nhds (W n f)))
+
 end SpectralConditionDefinitions
 
 /-! ### Product Forward Tube and Paley-Wiener-Schwartz Axioms -/
