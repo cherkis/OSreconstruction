@@ -2,335 +2,267 @@
 
 **Branch**: `r2e/ruelle-poly-bound-chain` (will likely fork into `r2e/cluster-ibp-rework` for the actual implementation).
 **Target**: close the production `sorry` at `OSReconstruction/Wightman/Reconstruction/WickRotation/RuelleClusterBound.lean:718` in the body of `W_analytic_cluster_integral_via_ruelle`.
-**Estimated effort**: 2–4 weeks of focused work, with one identified high-risk piece (sub-lemma 4 below) that may force adding a structural hypothesis on the spectral side.
-**Vetting status**: DRAFT (this file). Not yet executed.
+**Vetting status**: DRAFT. **Original Tflat-based plan ruled out** by Gemini-deep-think vetting (2026-05-10). Probing the alternatives.
 **Author**: Michael Douglas (Claude Code), 2026-05-10.
 
 ---
 
 ## What's being closed
 
-`W_analytic_cluster_integral_via_ruelle` (henceforth WCIVR) is the OS-side cluster theorem for the Wick-rotated boundary integral. Its statement (paraphrased):
+`W_analytic_cluster_integral_via_ruelle` (henceforth WCIVR) is the OS-side cluster theorem for the Wick-rotated boundary integral. Statement (paraphrased):
 
 > For OPTR-supported `f : SchwartzNPoint d n` and `g : SchwartzNPoint d m`, given `RuelleAnalyticClusterHypotheses Wfn n m`, the joint Wick-rotated integral
 > ```
-> ∫ F_ext_on_translatedPET_total Wfn (wick(x_n, x_m + (0,a))) · (f ⊗ g_a)(x) dx
+> J(a) := ∫ F_ext_on_translatedPET_total Wfn (wick(x_n, x_m + (0,a))) · (f ⊗ g_a)(x) dx
 > ```
 > converges to the product of single-block integrals `L_n · L_m` as `|⃗a| → ∞`.
 
-The proof body is currently `sorry`'d at the dominator-integrability step. The reason: the regulator-corrected `RACH.bound` produces a bound with a `(1 + Δ(Im z)⁻¹)^M` factor (Streater-Wightman 3.1.1 shape), which after Wick rotation becomes `(1 + Δ(time-diffs)⁻¹)^M` — a codimension-1 diagonal singularity that's **not locally integrable for `M ≥ 1`**. The naive pointwise-dominator + DC route therefore fails.
+The current `sorry` is at the dominator-integrability step. The reason: post-vacuity-fix `RACH.bound` carries a `(1 + Δ⁻¹)^M` boundary regulator (Streater-Wightman 3.1.1 shape). After Wick rotation this becomes `1/Δ_time^M` — codimension-1 diagonal singularity, **not locally integrable for `M ≥ 1`**. So a pointwise dominator + dominated convergence cannot work.
 
-The textbook resolution (Streater-Wightman §3.4 / Ruelle 1962 / Araki-Hepp-Ruelle 1962) goes through the **Schwartz dual pairing**, not pointwise dominators. That's what this rework implements.
-
----
-
-## Architecture
-
-The Schwartz-pairing argument has six pieces, in order of dependency:
-
-```
-[Wfn.spectrum_condition_compact_subset]    ← already shipped (Phase 3 soft, commit 973617a)
-        │
-        │  bv_implies_fourier_support           ← already relaxed (commit ebd007f)
-        ▼
-[Tflat : SchwartzMap → ℂ on the dual cone]
-        │
-        │  fl_representation_from_bv
-        ▼
-[W_analytic_BHW(z) = (FL Tflat)(z) on ForwardTube d (n+m)]
-        │
-        │  Sub-lemma 1: extract Tflat for W_analytic_BHW.
-        │  Sub-lemma 2: reduce W_analytic_BHW(joint Wick config) to FL form.
-        │  Sub-lemma 3: Schwartz-Fubini exchange.
-        ▼
-[Joint integral = Tflat(Ψ_a)] where Ψ_a is Schwartz on dual cone, parameterized by `a`
-        │
-        │  Sub-lemma 4: Tflat(Ψ_a) → Tflat(Ψ_∞) as |⃗a| → ∞
-        │              (cluster spectral RL — the load-bearing piece)
-        │
-        │  Sub-lemma 5: identify Tflat(Ψ_∞) with L_n · L_m (single-block products)
-        ▼
-[WCIVR conclusion: joint integral → L_n · L_m]
-```
+The textbook resolution (Streater-Wightman §3.4 / Ruelle 1962 / AHR 1962) routes through a **Schwartz dual pairing** with a tempered distribution `Tflat`, not pointwise dominators.
 
 ---
 
-## Sub-lemma 1: Tflat extraction for W_analytic_BHW
+## ⚠️ The FL trap that rules out the original Tflat-based plan
 
-**Goal**: produce `Tflat_BHW : SchwartzMap (Fin ((n+m)*(d+1)) → ℝ) ℂ →L[ℂ] ℂ` with `HasFourierSupportInDualCone (eR '' ForwardConeAbs d (n+m)) Tflat_BHW` such that
+**Vetting by Gemini (2026-05-10)** identified a fatal flaw in the original Schwartz-pairing plan that uses a single Tflat:
 
+For Wick-rotated points `z_k = wick(x_k) = (i τ_k, x_k)`, the FL kernel is
 ```
-W_analytic_BHW Wfn (n+m)  =  fourierLaplaceExtMultiDim ... Tflat_BHW
+exp(i ξ_k · z_k) = exp(- E_k · Δτ_k - i p_k · Δx_k)
 ```
+where Δτ_k are imaginary-time differences. Tflat's support in the dual cone (E_k ≥ 0) means the kernel is bounded **only when all Δτ_k > 0**.
 
-on `ForwardTube d (n+m)`.
+For OPTR-supported `f, g` independently, the within-block time differences are positive. But the **junction** Δτ_{n+1, n} = τ_{n+1} − τ_n (last time of f vs first time of g) is **unconstrained** — `f` and `g` are independent Schwartz tests on independent OPTR domains. Junction inversion (`τ_{n+1} < τ_n`) is generic.
 
-**Inputs**:
-- `Wfn.spectrum_condition_compact_subset (n+m)` (compact-subset polynomial growth, satisfiable form, shipped in 973617a).
-- `bv_implies_fourier_support` (relaxed in ebd007f to take compact-subset growth).
-- `fl_representation_from_bv` (existing axiom; takes growth + BV → produces FL representation).
+For junction-inverted z, the kernel `exp(i ξ · z)` has a factor `exp(+E · |Δτ_junction|)` that blows up exponentially as `E → ∞` in the Tflat support. So `ψ_z(ξ) := exp(i ξ · z)` **fails to be Schwartz**. Any application of `schwartz_clm_fubini_exchange` (which requires polynomial seminorm growth of the Schwartz-valued family) crashes here.
 
-**Mechanical wiring**:
-1. Identify the `W_analytic` witness inside `Wfn.spectrum_condition_compact_subset (n+m)` with `(W_analytic_BHW Wfn (n+m)).val` on the forward-tube portion of PET. This is a uniqueness argument via `tube_holomorphic_unique_from_bv` — both `W_analytic_BHW` and the witness from `spectrum_condition_compact_subset` are tube-holomorphic with the same boundary values on the forward tube, so they coincide.
-2. Apply `bv_implies_fourier_support` with:
-   - `C := ForwardConeAbs d (n+m)` (the imaginary-part cone for `ForwardTube d (n+m)`).
-   - `F := W_analytic_BHW Wfn (n+m)` (restricted to the forward-tube image).
-   - `hF_growth := compact-subset form from spectrum_condition_compact_subset`.
-   - `hF_bv := boundary value clause from spectrum_condition_compact_subset`.
-3. Obtain `Tflat_BHW` and the FL-extension equality.
+**Conclusion**: a single Tflat representation `W_analytic_BHW(z) = Tflat(ψ_z)` does NOT extend to all of PET — it works only on configurations whose imaginary differences are all positive (= the unpermuted ForwardTube subset of PET). Joint configs with junction inversion lie outside the FL representation's natural domain.
 
-**Estimated effort**: ~3–5 days.
-
-**Risks**:
-- The witness identification (step 1) requires `tube_holomorphic_unique_from_bv` to apply to both `W_analytic_BHW` and the `spectrum_condition_compact_subset` witness. The two functions need to have the same BVs on `ForwardTube`. For `W_analytic_BHW`, this requires its construction to expose the BVs in a form compatible with `spectrum_condition_compact_subset`'s clause. This may need bridging work through existing `BHWExtension.lean` lemmas.
-
-**Deliverable**: a theorem
-```lean
-theorem W_analytic_BHW_fl_representation
-    (Wfn : WightmanFunctions d) (n m : ℕ) :
-    ∃ (Tflat : SchwartzMap (Fin ((n+m) * (d+1)) → ℝ) ℂ →L[ℂ] ℂ),
-      HasFourierSupportInDualCone (...) Tflat ∧
-      ∀ z ∈ ForwardTube d (n+m),
-        (W_analytic_BHW Wfn (n+m)).val z =
-          fourierLaplaceExtMultiDim ... Tflat (flatten z)
-```
+This rules out the original 6-sub-lemma plan.
 
 ---
 
-## Sub-lemma 2: Joint Wick config in FL form
+## Three viable alternatives
 
-**Goal**: express `W_analytic_BHW Wfn (n+m) (joint Wick config (z₁, z₂ + (0,a)))` as a Schwartz pairing for `(z₁, z₂)` in OPTR-Wick-rotation image.
+### Alternative A — Per-permutation Tflat, glued by BHW symmetry
 
-**Inputs**:
-- Sub-lemma 1's Tflat representation.
-- `joint_wick_config_in_PET` (existing in `RuelleClusterBound.lean`) — joint Wick config lies in PET for OPTR-supported configs with distinct times.
+**Math**: PET is the permutation closure of ForwardTube. For each permutation σ ∈ S_{n+m}, `σ⁻¹(ForwardTube)` ⊂ PET admits a single Tflat representation. By BHW (`W_analytic_BHW` is permutation-invariant on PET), the Tflat's for different σ are related by permutation symmetry on the dual side.
 
-**Plan**: substitute the joint config into the FL representation:
+For OPTR f, g with junction inversion, the natural permutation σ swaps the offending indices to put the joint config in ForwardTube under σ⁻¹. Apply Tflat_σ. Sum over the appropriate covering permutations.
+
+**Lean status**:
+- Requires a **family of Tflat distributions indexed by permutation**, with explicit symmetry relations.
+- Need to prove the family is consistent (uniqueness of W_analytic on overlapping pieces).
+- The Schwartz-Fubini exchange now has to be done per-Tflat_σ, then summed.
+
+**Estimated effort**: 3–5 weeks. Mathematical complexity dominates; Lean engineering is roughly proportional.
+
+**Risk**: high — the per-σ FL machinery is a new layer, and the permutation symmetry relations on the dual side are not in the project today.
+
+### Alternative B — GNS-Bochner shortcut (Gemini's first recommendation)
+
+**Math** (per Gemini): use the Wightman reconstruction identity directly. Define analytic Hilbert states `Φ(z) ∈ GNSHilbertSpace Wfn` for tube z via
 ```
-W_analytic_BHW(joint(wick z₁, wick z₂ + (0,a))) =
-  Tflat_BHW(ψ_{joint(wick z₁, wick z₂ + (0,a))})
+Φ(z₁,...,z_n) := exp(-Im(z_n)·P) φ̂(x_n) ... exp(-Im(z₁ - z₂)·P) φ̂(x_1) Ω
 ```
-where `ψ_z(ξ) = exp(i ξ · flatten(z))` (the FL kernel, restricted to a Schwartz-cutoff support compatible with Tflat's dual cone).
+(or some such formulation; spectrum_condition gives `e^{-yP}` bounded for `y ∈ V+`). Then:
+- `u := (z̄_n, ..., z̄_1)` for OPTR f-block: in ForwardTube (positive successive Im differences). ✓
+- `v := (z_{n+1}, ..., z_{n+m})` for OPTR g-block: in ForwardTube. ✓
+- **No junction constraint needed at the Hilbert level**: Φ(u) and Φ(v) are independently well-defined finite-norm vectors. Their inner product `⟨Φ(u), Φ(v)⟩` equals `W_analytic(joint)` regardless of junction ordering.
+- Bochner-integrate against f, g: `Ψ_f := ∫ Φ(u(x)) f(x) dx`, `Ψ_g := ∫ Φ(v(x)) g(x) dx`.
+- Joint integral `J(a) = ⟨Ψ_f, U(a) Ψ_g⟩`.
+- Apply existing `gns_orthogonal_spatial_cobounded_decay_of` (PR #86) to derive `J(a) → ⟨Ψ_f, Ω⟩ ⟨Ω, Ψ_g⟩ = L_n · L_m`.
 
-The `(0,a)` shift on the m-block gives:
-```
-flatten(joint(wick z₁, wick z₂ + (0,a))) = flatten(joint(wick z₁, wick z₂)) + (0_{n-block}, (0,a)-shift_{m-block})
-```
-so
-```
-ψ_{joint with shift a} = exp(i · (n-block ξ part) · flatten(wick z₁))
-                       · exp(i · (m-block ξ part) · flatten(wick z₂))
-                       · exp(i · (m-block spatial ξ part) · a⃗)
-```
+**Lean status (probed 2026-05-10)**:
+- ✅ GNS Hilbert space exists (`GNSHilbertSpace Wfn`, `gnsVacuum`).
+- ✅ `WightmanInnerProduct d Wfn.W F G` for Borchers sequences `F, G`.
+- ✅ `gns_cluster_completion`, `gns_orthogonal_spatial_cobounded_decay_of` (PR #86).
+- ✅ `poincareActGNS` (Poincaré rep on GNS, used as `U(a)`).
+- ❌ **No analytic Hilbert states `Φ(z)` for tube `z` defined.** This is the missing infrastructure.
+- ❌ No `e^{-yP}` bounded-operator infrastructure for forward-cone `y`.
+- ❌ No identity linking `⟨Φ(u), Φ(v)⟩` to `W_analytic(joint)` exposed as a lemma.
 
-The last factor `exp(i · m-block spatial · a⃗)` is the **only `a`-dependent piece** — and it's a phase factor. This is the structural heart of the cluster argument: shifting the m-block spatially adds a phase to the spectral pairing, and that phase oscillates as `|⃗a| → ∞`.
+**Estimated effort to ship analytic-state machinery + glue**:
+- `e^{-yP}` semigroup as bounded operators on GNS (via spectral functional calculus on the joint translation rep): **1–2 weeks**.
+- Analytic-state construction `Φ(z)` for `z ∈ ForwardTube`: **1 week**, requires careful adjoint conventions and BHW-ordering analysis.
+- `⟨Φ(u), Φ(v)⟩ = W_analytic(joint)` identity: **3–5 days** if analytic-state machinery is clean; could be longer if Lean type-class issues bite.
+- Bochner integration of Schwartz-tame Hilbert-valued families: **2–3 days** (Mathlib has `MeasureTheory.Bochner` infrastructure, application is mechanical).
+- Glue with cluster-decay: **3 days**.
+- **Total: 3–5 weeks**.
 
-**Estimated effort**: ~3–5 days.
+**Risk**: medium. The analytic-Hilbert-state machinery is well-understood mathematically (Reed-Simon II §IX.8) but new to this project. Could compound with subtle technical obstacles around the spectral calculus and translation-by-imaginary-vector conventions.
 
-**Risks**: low. Mostly algebra of the FL kernel + Wick rotation. The `joint_wick_config_in_PET` infrastructure already exists.
+**Plus**: aligns with the project's existing GNS direction; the analytic-state machinery would also unlock other cluster / decay arguments for free.
 
-**Deliverable**: a `=` identity expressing the cluster integrand as `Tflat_BHW(ψ_{wick(z₁,z₂),a})` for an explicit Schwartz-parameterized family.
+### Alternative C — Axiomatize the joint-integral cluster (Gemini's fallback)
 
----
-
-## Sub-lemma 3: Schwartz-Fubini exchange
-
-**Goal**: interchange the `(p₁, p₂)` integral with the `Tflat_BHW` pairing.
-
-```
-∫_{p₁, p₂} W_analytic_BHW(joint(wick p₁, wick p₂ + (0,a))) · f(p₁) · g(p₂) dp₁ dp₂
-  =  Tflat_BHW( ∫_{p₁, p₂} ψ_{joint(wick p₁, wick p₂ + (0,a))} · f(p₁) · g(p₂) dp₁ dp₂ )
-  =:  Tflat_BHW( Ψ_a )
-```
-
-where `Ψ_a` is the Bochner integral of the Schwartz family `ψ_{joint}` weighted by `f ⊗ g`.
-
-**Inputs**:
-- Existing project axiom `schwartz_clm_fubini_exchange` (`OSReconstruction/GeneralResults/SchwartzFubini.lean`) — exactly this Fubini-CLM exchange for Schwartz-valued families. Already vetted "Standard".
-
-**Plan**:
-1. Verify the Schwartz-valued family `(p₁, p₂) ↦ ψ_{joint(wick p₁, wick p₂ + (0,a))}` has polynomial seminorm growth in `(p₁, p₂)` (needed for `schwartz_clm_fubini_exchange`'s hypothesis).
-2. Apply the axiom to obtain the equality above, defining `Ψ_a` along the way.
-
-**Estimated effort**: ~3 days.
-
-**Risks**: low. The seminorm-growth bound on the Schwartz-valued family is mechanical.
-
-**Deliverable**: a Schwartz function `Ψ_a : SchwartzMap (Fin ((n+m)(d+1)) → ℝ) ℂ` constructed from `(f, g, a)` and the Wick kernel, plus the equality `joint integral = Tflat_BHW(Ψ_a)`.
-
----
-
-## Sub-lemma 4: Tflat_BHW(Ψ_a) → Tflat_BHW(Ψ_∞) as |⃗a| → ∞
-
-**This is the load-bearing piece.** Everything else is wiring; this is the actual cluster-decay content.
-
-**Goal**: `Tflat_BHW(Ψ_a) → Tflat_BHW(Ψ_∞)` as `|⃗a| → ∞`, where `Ψ_∞` is the disconnected limit.
-
-**Decomposition of Ψ_a**: per Sub-lemma 2, `Ψ_a` factors as
-```
-Ψ_a(ξ) = (n-block factor: depends on ξ_n, f̂)
-       · (m-block factor: depends on ξ_m, ĝ)
-       · exp(i · ξ_{m-spatial} · a⃗)
-```
-
-(Schematically — the actual form involves the Wick kernel and integration variables. The phase `exp(i · ξ_{m-spatial} · a⃗)` is the only `a`-dependent piece.)
-
-**Why this gives cluster decay**:
-- `Tflat_BHW(Ψ_a)` is a tempered-distribution pairing.
-- The phase factor `exp(i · ξ_{m-spatial} · a⃗)` oscillates with `a⃗` along the m-block spatial frequencies.
-- By spectral RL on tempered distributions: if `Tflat_BHW`'s spectral content has no atom at `ξ_{m-spatial} = 0` on the off-diagonal piece (the part connecting n-block and m-block), the pairing decays to 0 as `|a⃗| → ∞`.
-- The DIAGONAL piece (n-block ⊗ m-block disconnected) is independent of `a⃗`, contributing the `Ψ_∞` limit.
-
-This is **the same mathematical content as L2** (`gns_orthogonal_spatial_cobounded_decay_of`), just on the Tflat side instead of the GNS Hilbert side.
-
-**Two paths**:
-
-### Path 4.A — direct decay proof on Tflat (analogous to L5/L2)
-
-Treat `Tflat_BHW` as having sufficient spectral structure to apply a Riemann-Lebesgue-type argument:
-- `Tflat_BHW` has support in the dual cone (from `bv_implies_fourier_support`).
-- The off-diagonal part of `Tflat_BHW` (paired against `Ψ_a`'s phase factor) has no zero-momentum atom at `ξ_{m-spatial} = 0`.
-- Therefore the pairing decays.
-
-This requires either:
-- Proving that Tflat decomposes into a "diagonal" piece (constant in `a`) + "off-diagonal" piece (decays with `a`). This decomposition is the Wightman R4 cluster axiom transported to the spectral side via SNAG/FL — substantial.
-- Or invoking an L4-style spectral data axiom on Tflat: introduce `Tflat_ClusterDecay : SchwartzMap (...) → 𝓒(SpacetimeDim → 𝓢(...))` capturing the cluster decomposition.
-
-**Estimated effort**: 1–2 weeks for a direct proof; 3 days if we axiomatize the decomposition (Likely "Standard" textbook content per S-W §3.5).
-
-### Path 4.B — reduce to L2 via GNS-spectral identification
-
-The Wightman axioms `Wfn` already include `Wfn.cluster` (R4). The R4 cluster on Wightman functions is mathematically equivalent to:
-- `gns_orthogonal_spatial_cobounded_decay_of` content (the GNS-spectral form, conditional in PR #86).
-- Both reduce to the same SNAG-derived spectral measure on the GNS Hilbert space without a zero-momentum atom on `Ω⊥`.
-
-Path 4.B identifies `Tflat_BHW`'s off-diagonal piece with the GNS off-diagonal matrix-element spectral measure, then quotes `gns_orthogonal_spatial_cobounded_decay_of` (or its appropriate analog) to get the cluster decay.
-
-This requires bridging:
-- Tflat_BHW (constructed from W_analytic_BHW's BV via `bv_implies_fourier_support`).
-- GNS off-diagonal matrix elements `⟨Φ, U(a) ψ⟩` for appropriate `Φ, ψ` constructed from `f, g`.
-
-The link is the Wightman reconstruction identity:
-```
-W_analytic_BHW(z₁ ⊕ z₂) = ⟨Φ_{z₁}^*, Φ_{z₂}⟩
-```
-for analytic Hilbert-space states `Φ_z := exp(-yP) φ(x) Ω` (analytic continuation of `φ(x) Ω` in y = Im(z)).
-
-**Estimated effort**: 1–2 weeks. Bridging is non-trivial but uses existing GNS infrastructure (`GNSHilbertSpace.lean`).
-
-### Path 4.C — assume cluster spectral data
-
-Add a structural hypothesis (analogous to `L4SpectralData`) capturing what we need: a decomposition of `Tflat_BHW` into diagonal + decaying-off-diagonal parts.
+**Math**: rather than going through any spectral or Hilbert-side machinery, introduce a `ClusterSpectralData` hypothesis that directly asserts `J(a) → L_n · L_m` for the joint integral itself, with appropriate hypotheses (OPTR support, etc.).
 
 ```lean
-structure ClusterSpectralData (Wfn : WightmanFunctions d) (n m : ℕ) : Prop where
-  data :
-    ∃ (Tflat_BHW : SchwartzMap → ℂ),
-      [...Tflat_BHW = FL extension of W_analytic_BHW (n+m)...] ∧
-      ∀ (Ψ : SchwartzMap),
-        Filter.Tendsto (fun a => Tflat_BHW(Ψ_a)) cobounded (𝓝 (Tflat_BHW(Ψ_∞)))
-        [...where Ψ_a is Ψ shifted by phase exp(i ξ · a)...]
+structure JointIntegralClusterData (Wfn : WightmanFunctions d) (n m : ℕ) : Prop where
+  decay :
+    ∀ (f : SchwartzNPoint d n) (g : SchwartzNPoint d m),
+      OPTR_supp f → OPTR_supp g → ∀ ε > 0,
+        ∃ R > 0, ∀ a, a 0 = 0, |⃗a| > R, ∀ g_a equiv to g(·−a),
+          ‖J(a) − L_n · L_m‖ < ε
 ```
 
-Then close the cluster sorry conditional on `ClusterSpectralData`. Discharge as a separate proof obligation (or axiom, with Gemini vetting).
+This is essentially the cluster-theorem statement promoted to a hypothesis structure, conditional only on Wfn (not on RACH).
 
-**Estimated effort**: 3–5 days for the conditional reduction. Discharge is open-ended (similar trajectory to L4SpectralData).
+**Lean status**: trivial to write the structure. Discharge becomes its own future-work item.
 
-### Recommendation for sub-lemma 4
+**Estimated effort**: 3–5 days for the structure + glue at the cluster proof site.
 
-Start with **Path 4.B** (reduce to L2/GNS) — it leverages existing infrastructure, is mathematically clean, and avoids new axioms. If bridging proves too difficult, fall back to **Path 4.C** (axiomatize cluster spectral decomposition) and add it to the trust audit.
+**Risk**: low to ship; the discharge becomes another open item like RACH was (now partially closed). The new axiom (if shipped) sits at the QFT-trust-boundary — Xi's discipline applies, and we'd need vetting (Gemini chat + deep-think) and audit-table entry.
 
-Path 4.A (direct decay on Tflat) is the most ambitious and probably overkill for first pass.
+**Trade-off**: this *transports* the unsolved content rather than solving it. It moves the open work from "prove the cluster theorem from RACH" to "supply `JointIntegralClusterData` from Wfn". The latter is essentially the textbook content and would be vetted as such.
 
 ---
 
-## Sub-lemma 5: Identify Tflat_BHW(Ψ_∞) with L_n · L_m
+## Comparison and recommendation
 
-**Goal**: the `a → ∞` limit `Tflat_BHW(Ψ_∞)` equals the product of single-block boundary integrals
+| Alternative | Effort | Risk | New axioms | Project alignment |
+|-------------|--------|------|------------|-------------------|
+| A — Per-permutation Tflat | 3–5 wk | High | None | Stays in SCV/FL track |
+| B — GNS-Bochner shortcut | 3–5 wk | Medium | None | Aligns with GNS / L2 work |
+| C — Axiomatize joint cluster | 3–5 days | Low ship, deferred discharge | One new vetted hypothesis | Transports problem |
+
+**Pre-final recommendation** (subject to user vetting):
+
+**Pursue B (GNS-Bochner) as the primary path**, with **C as the explicit fallback** if the analytic-state infrastructure proves harder than estimated. Reasons:
+
+1. B aligns with the GNS direction the L2/L4 work in PR #86 already pushed.
+2. B's intermediate machinery (analytic-Hilbert states + bounded `e^{-yP}` semigroup) has independent value for future cluster / decay arguments.
+3. C is a 3–5 day fallback. If B's infrastructure work hits a 3–4 week wall, drop to C.
+4. A (per-permutation Tflat) is the highest-risk path with the least independent value; deprioritize.
+
+**A is genuinely an option** if Xi's E→R checkpoint work happens to expose Tflat or BHW symmetry infrastructure that we don't have yet — worth checking with him before committing.
+
+---
+
+## Sub-lemma decomposition for Alternative B
+
+Assuming we go with B:
+
+### B.1 — Bounded `e^{-yP}` semigroup on GNS Hilbert space
+
+For `y ∈ V̄+` (forward cone closure), `exp(-y·P)` is a bounded operator on `GNSHilbertSpace Wfn`, where `P` is the joint translation generator (4-momentum) from SNAG.
+
+**Building blocks**:
+- SNAG theorem axiom (existing) gives joint PVM `E` for the spacetime translation rep on GNS.
+- `exp(-y·P) := ∫ exp(-y·p) dE(p)` is a positive operator (since `p ∈ V̄+` on the spectrum, `y·p ≥ 0`, so `exp(-y·p) ≤ 1`).
+- Bounded with norm ≤ 1.
+
+**Estimated effort**: 1–2 weeks. Spectral functional calculus on the SNAG-derived PVM.
+
+### B.2 — Analytic Hilbert states `Φ(z)` for `z ∈ ForwardTube d n`
+
+Define `Φ(z₁,...,z_n) ∈ GNSHilbertSpace Wfn` via the BHW-order convention:
 ```
-L_n · L_m  =  (∫ W_analytic_BHW(wick z₁) · f(z₁) dz₁) · (∫ W_analytic_BHW(wick z₂) · g(z₂) dz₂)
+Φ(z₁,...,z_n) := exp(-Im(z₁)·P) φ(Re(z₁)) ·
+                 exp(-Im(z₂ − z₁)·P) φ(Re(z₂ − z₁)) ·
+                 ... ·
+                 exp(-Im(z_n − z_{n-1})·P) φ(Re(z_n − z_{n-1})) Ω
+```
+Each `exp(-(y_k − y_{k-1})·P)` is bounded (B.1) since successive Im differences are in V+. The field operators `φ(x)` need to be applied to vectors in their domain — for analytic states `Φ(z)` with positive Im differences, these are standard arguments.
+
+**Estimated effort**: 1 week, including identification with existing project field-operator machinery.
+
+### B.3 — `⟨Φ(u), Φ(v)⟩ = W_analytic(joint(u,v))` identity
+
+Where `u := (z̄_n,...,z̄_1)` and `v := (z_{n+1},...,z_{n+m})` for `(z₁,...,z_{n+m}) ∈ PET`.
+
+The identity holds by direct computation: expanding both sides via the field-operator definitions and the BHW analytic-continuation theorem.
+
+**Estimated effort**: 3–5 days.
+
+### B.4 — Bochner-integrated Hilbert states from Schwartz tests
+
+For `f : SchwartzNPoint d n` (OPTR-supported), define
+```
+Ψ_f := ∫ Φ(wick(x)) f(x) dx ∈ GNSHilbertSpace Wfn
 ```
 
-**Plan**:
-1. Compute `Ψ_∞` from Sub-lemma 4: it's the disconnected piece of `Ψ_a` (m-block phase factor `→ 0` on the off-diagonal, leaving only the disconnected `n-block × m-block` factor).
-2. Apply Sub-lemma 1's FL representation in reverse to recover the n-block and m-block boundary integrals.
-3. Tflat_BHW factorizes on the disconnected piece into Tflat_n ⊗ Tflat_m (this requires R4 cluster + spectral support analysis).
+via Mathlib's `MeasureTheory.Bochner` infrastructure. Need:
+- Strong measurability of `x ↦ Φ(wick(x))` as a Hilbert-valued map.
+- Norm bound: `‖Φ(wick(x))‖ ≤ K(x)` with `K(x) · |f(x)|` integrable (from Schwartz fall-off).
 
-**Estimated effort**: ~5 days.
+**Estimated effort**: 2–3 days. Mathlib's Bochner infrastructure is ready.
 
-**Risks**: medium. The factorization Tflat_BHW → Tflat_n ⊗ Tflat_m on the disconnected piece IS an instance of cluster, but it's at the spectral level. May need careful handling.
+### B.5 — Glue: joint integral = `⟨Ψ_f, U(a) Ψ_g⟩`
 
----
+Combine B.3 (per-config inner product) with B.4 (Bochner integral) via Schwartz-Fubini for Hilbert-valued integrals.
 
-## Sub-lemma 6 (glue): Combine 1–5 into the cluster theorem body
+**Estimated effort**: 3 days.
 
-Replace the sorry at `RuelleClusterBound.lean:718` with:
+### B.6 — Apply cluster-decay and identify limit
 
-```lean
--- (1) extract Tflat_BHW
-obtain ⟨Tflat_BHW, hTflat_supp, hTflat_FL⟩ := W_analytic_BHW_fl_representation Wfn (n+m)
--- (2) joint config in FL form
-have h_FL_joint := joint_FL_form Wfn n m ...  -- Sub-lemma 2
--- (3) Schwartz-Fubini
-have h_fubini := schwartz_fubini_for_cluster Wfn n m f g a hsupp_f hsupp_g
--- (4) cluster-decay on Tflat_BHW
-have h_decay := tflat_cluster_decay Wfn n m f g  -- Sub-lemma 4
--- (5) identify limit
-have h_limit_id := tflat_disconnected_limit_eq_product Wfn n m f g  -- Sub-lemma 5
--- (6) conclude
-exact ε-R conversion of (h_decay) to the existential form needed
-```
+With `J(a) = ⟨Ψ_f, U(a) Ψ_g⟩`:
+- Split off `Ω`-projections: `Ψ_f = ⟨Ω, Ψ_f⟩·Ω + (Ψ_f^⊥)`, similarly for `Ψ_g`.
+- Apply `gns_orthogonal_spatial_cobounded_decay_of` to the `(Ψ_f^⊥, Ψ_g^⊥)` part.
+- Disconnected limit: `⟨Ψ_f, Ω⟩ ⟨Ω, Ψ_g⟩`.
+- Identify these projections with `L_n` and `L_m` via boundary recovery.
 
-**Estimated effort**: ~3 days.
+**Estimated effort**: 3–5 days.
 
----
+### B.7 — Wire into `W_analytic_cluster_integral_via_ruelle`
 
-## Total effort and risk
+Replace the `sorry` body with the assembled argument. The cluster theorem then becomes unconditional given `Wfn`'s axioms (not even RACH needed if the argument routes through GNS directly, though RACH may still be needed for other purposes in the broader cluster theorem).
 
-| Sub-lemma | Best case | Likely | Worst case | Risk |
-|-----------|-----------|--------|------------|------|
-| 1 (Tflat extraction) | 3 days | 5 days | 1 week | Witness-identification bridging |
-| 2 (joint config FL form) | 3 days | 5 days | 1 week | Low — algebra |
-| 3 (Schwartz-Fubini) | 2 days | 3 days | 1 week | Low — axiom available |
-| 4 (cluster decay) | 1 week | 2 weeks | 4 weeks | **HIGH** — load-bearing |
-| 5 (limit identification) | 3 days | 5 days | 1 week | Medium — Tflat factorization |
-| 6 (glue) | 2 days | 3 days | 1 week | Low — assembly |
-| **Total** | **2.5 weeks** | **3.5 weeks** | **~9 weeks** | |
+**Estimated effort**: 2–3 days.
 
-**Risk concentration**: sub-lemma 4 dominates the timeline. Mitigation: Path 4.B (reduce to existing L2/GNS) keeps it bounded; Path 4.C (axiomatize) caps at 1 week with the cost of a new vetted axiom.
+### Sub-total for B
+
+3–5 weeks, with B.1 (bounded `e^{-yP}`) being the largest piece.
 
 ---
 
-## Outputs of this rework
+## Ordering of work
 
-After completion, the cluster theorem `W_analytic_cluster_integral_via_ruelle` is **fully proved** (no `sorry` in body) **conditional on** `RuelleAnalyticClusterHypotheses Wfn n m` (the existing hypothesis structure).
+If B is chosen:
+1. **B.1 first** — bounded `e^{-yP}` semigroup. This is the foundational infrastructure; everything else depends on it.
+2. **B.2 after B.1** — analytic Hilbert states.
+3. **B.3, B.4, B.5 in parallel-ish** — they're each ~3 days, independent given B.2.
+4. **B.6, B.7 last** — glue.
 
-Discharging RACH itself is the *separate* next phase:
-- `RACH.bound` → `L4SpectralData` is proved (PR #86).
-- `RACH.pointwise` → would follow from `L2SpectralData` + GNS bridging (parts shipped in PR #86; full discharge still open).
-
-So the IBP rework closes one of three remaining items for unconditional E4-cluster on the Schwinger side. The other two are RACH discharge (L1/L3/L6/L7 chain) and the schwinger_E4 bridge (already in place).
+If C is chosen as fallback (after some progress on B reveals it's harder than estimated):
+1. Define `JointIntegralClusterData` structure.
+2. Wire into cluster proof.
+3. Defer discharge as future work.
 
 ---
 
-## Open questions for the user before I start
+## Open questions for the user
 
-1. **Path choice for sub-lemma 4**: lean toward 4.B (reduce to L2/GNS), with 4.C (axiomatize) as a safety net? Or push for 4.A (direct decay on Tflat)?
-2. **Branching strategy**: continue on `r2e/ruelle-poly-bound-chain`, or fork a new branch `r2e/cluster-ibp-rework` from current head? Forking keeps the chain-repair changes separable and PR-able.
-3. **PR cadence**: ship the chain-repair (3 commits already on branch) as a small PR first, then the IBP rework on a follow-up branch? Or accumulate everything on one branch?
-4. **Coordination with Xi**: the IBP rework touches `RuelleClusterBound.lean` (his code area, even though I authored RACH). PR-ing it directly is fine, or discuss approach with him first?
+1. **Path choice**: B (GNS-Bochner, full infrastructure) or C (axiomatize, defer)? Per-permutation Tflat (A) is deprioritized.
+2. **Time budget**: 3–5 weeks for B is the realistic estimate. Acceptable, or push for C as a faster ship?
+3. **Coordination with Xi**: do we ping him now (post-pivot) or wait until we have concrete progress on B (or commitment to C)? Per his `bv_implies_fourier_support`-shaped previous reviews, he'd appreciate the Gemini-vetted FL-trap diagnosis even before code lands.
+4. **Branch**: fork `r2e/cluster-ibp-rework` from current `r2e/ruelle-poly-bound-chain` head? Or start a clean branch from main + cherry-pick the chain-repair commits?
+5. **PR cadence**: ship the chain-repair (commits `ebd007f`, `050449b`, `973617a`) as a small PR now — yes/no?
 
 ---
 
 ## Pre-reqs already in place
 
-- ✅ `Wfn.spectrum_condition_compact_subset` (commit `973617a`).
-- ✅ `bv_implies_fourier_support` relaxed (commit `ebd007f`).
+- ✅ `Wfn.spectrum_condition_compact_subset` (`973617a`) — satisfiable form for new code paths.
+- ✅ `bv_implies_fourier_support` relaxed (`ebd007f`) — though not used by Alternative B.
 - ✅ `vladimirov_tillmann` consumer relaxed.
 - ✅ `hasCompactSubsetGrowth_of_global_polyGrowth` helper.
-- ✅ `fl_representation_from_bv` axiom (existing; vetted).
-- ✅ `fourierLaplaceExtMultiDim_vladimirov_growth` proved (existing).
-- ✅ `schwartz_clm_fubini_exchange` axiom (existing; vetted).
-- ✅ `joint_wick_config_in_PET` (existing helper in RuelleClusterBound.lean).
+- ✅ `gns_cluster_completion` (existing).
+- ✅ `gns_orthogonal_spatial_cobounded_decay_of` (PR #86).
+- ✅ SNAG axiom (existing) — basis for B.1.
+- ✅ `WightmanInnerProduct` Borchers-sequence pairing (existing).
+- ❌ Bounded `e^{-yP}` semigroup — needs B.1.
+- ❌ Analytic Hilbert states `Φ(z)` for tube `z` — needs B.2.
 
-Everything needed for sub-lemmas 1–3 is in place. Sub-lemma 4's path is the main open architecture decision.
+---
+
+## Status of the FL-side Tflat machinery
+
+The chain-repair commits on this branch (`ebd007f`, `050449b`, `973617a`) **remain useful** independently of which alternative is chosen. They:
+- Make `bv_implies_fourier_support` hypothesis legitimate (Vladimirov H(T^C) form).
+- Add `Wfn.spectrum_condition_compact_subset` so new code doesn't perpetuate the unsatisfiable form.
+- Wire helper conversions at 4 call sites.
+
+These are project-trust-surface improvements regardless of the IBP rework path. Worth shipping as a small PR per Gemini's recommendation.
