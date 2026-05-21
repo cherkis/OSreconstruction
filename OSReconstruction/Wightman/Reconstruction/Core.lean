@@ -817,32 +817,33 @@ structure WightmanFunctions (d : ℕ) [NeZero d] where
       construction); they differ only in which polynomial-bound clause they
       assert.
 
-      Boundary values in this clause repeat the same boundary-value condition
-      as in `spectrum_condition` for self-containment; supplying both fields
-      from the same `W_analytic` is the intended use.
+      **Witness identity (per PR-#88 review)**: this field is a *property* of
+      the same `W_analytic` chosen by `spectrum_condition`, not a separate
+      existential. Concretely the bound is asserted on
+      `(spectrum_condition n).choose` (Lean's `Classical.choose` witness for
+      the `spectrum_condition` existential). This forces — by construction —
+      that consumers combining `spectrum_condition`'s differentiability /
+      boundary-value content with this field's compact-subset growth are
+      talking about a single analytic continuation, with no chance of mixing
+      witnesses across the two fields.
+
+      Boundary values are not repeated here (they live on
+      `spectrum_condition` and apply to the same `W_analytic` automatically).
 
       Ref: Streater-Wightman, *PCT, Spin and Statistics, and All That*,
       Theorem 3.1.1 (polynomial behavior on the forward tube). -/
   spectrum_condition_compact_subset : ∀ (n : ℕ),
-    ∃ (W_analytic : (Fin n → Fin (d + 1) → ℂ) → ℂ),
-      DifferentiableOn ℂ W_analytic (ForwardTube d n) ∧
-      -- Compact-subset polynomial growth (Vladimirov H(T^C)). Compact subsets
-      -- are taken inside the imaginary-part cone for `ForwardTube d n`, i.e.
-      -- imaginary parts `y` such that `InForwardCone d n y` holds.
-      (∀ (K : Set (Fin n → Fin (d + 1) → ℝ)), IsCompact K →
-        (∀ y ∈ K, InForwardCone d n y) →
-          ∃ (C_bd : ℝ) (N : ℕ), C_bd > 0 ∧
-            ∀ (x y : Fin n → Fin (d + 1) → ℝ), y ∈ K →
-              ‖W_analytic (fun k μ => (x k μ : ℂ) + (y k μ : ℂ) * Complex.I)‖ ≤
-                C_bd * (1 + ‖x‖) ^ N) ∧
-      -- Boundary values (same as spectrum_condition).
-      (∀ (f : SchwartzNPoint d n) (η : Fin n → Fin (d + 1) → ℝ),
-        InForwardCone d n η →
-        Filter.Tendsto
-          (fun ε : ℝ => ∫ x : NPointDomain d n,
-            W_analytic (fun k μ => ↑(x k μ) + ε * ↑(η k μ) * Complex.I) * (f x))
-          (nhdsWithin 0 (Set.Ioi 0))
-          (nhds (W n f)))
+    -- Compact-subset polynomial growth (Vladimirov H(T^C)) on
+    -- `(spectrum_condition n).choose`. Compact subsets are taken inside the
+    -- imaginary-part cone for `ForwardTube d n`, i.e. imaginary parts `y`
+    -- such that `InForwardCone d n y` holds.
+    ∀ (K : Set (Fin n → Fin (d + 1) → ℝ)), IsCompact K →
+      (∀ y ∈ K, InForwardCone d n y) →
+        ∃ (C_bd : ℝ) (N : ℕ), C_bd > 0 ∧
+          ∀ (x y : Fin n → Fin (d + 1) → ℝ), y ∈ K →
+            ‖(spectrum_condition n).choose
+                (fun k μ => (x k μ : ℂ) + (y k μ : ℂ) * Complex.I)‖ ≤
+              C_bd * (1 + ‖x‖) ^ N
 
 namespace WightmanFunctionsCore
 
@@ -875,11 +876,19 @@ def toWightmanFunctions (Wcore : WightmanFunctionsCore d)
     -- form. The conversion is: for compact `K` of imaginary parts, bound
     -- `‖y‖` over `K` by some `R_K`, then apply the global bound and absorb
     -- `R_K` into the constant.
-    intro n
-    obtain ⟨W_analytic, hDiff, ⟨C_bd, N, hC_pos, hgrowth⟩, hBV⟩ :=
-      Wcore.spectrum_condition n
-    refine ⟨W_analytic, hDiff, ?_, hBV⟩
-    intro K hK_cpt _hK_in_cone
+    --
+    -- The goal involves `(spectrum_condition n).choose` where, after the
+    -- field assignment `spectrum_condition := Wcore.spectrum_condition`,
+    -- `self.spectrum_condition = Wcore.spectrum_condition` definitionally,
+    -- so `(self.spectrum_condition n).choose = (Wcore.spectrum_condition n).choose`.
+    -- We use `Classical.choose_spec` to extract the spec on this canonical
+    -- witness (per PR-#88 review: the compact-subset growth is a property
+    -- *of the same chosen W*, not a separate existential).
+    intro n K hK_cpt hK_in_cone
+    obtain ⟨hDiff, ⟨C_bd, N, hC_pos, hgrowth⟩, _hBV⟩ :=
+      (Wcore.spectrum_condition n).choose_spec
+    -- `hgrowth : ∀ z ∈ ForwardTube d n, ‖(Wcore.spectrum_condition n).choose z‖ ≤
+    --              C_bd * (1 + ‖z‖) ^ N`.
     -- Bound ‖y‖ over compact K.
     obtain ⟨R, hR⟩ : ∃ R : ℝ, ∀ y ∈ K, ‖y‖ ≤ R := by
       rcases hK_cpt.bddAbove_image continuous_norm.continuousOn with ⟨R, hR⟩
@@ -889,21 +898,9 @@ def toWightmanFunctions (Wcore : WightmanFunctionsCore d)
     set z : Fin n → Fin (d + 1) → ℂ := fun k μ => (x k μ : ℂ) + (y k μ : ℂ) * Complex.I
       with hz_def
     have hRy : ‖y‖ ≤ max R 0 := le_trans (hR y hy) (le_max_left _ _)
-    -- Membership of z in the forward tube via the imaginary-part description.
-    -- (Caller supplied the cone constraint via hK_in_cone but it is unused
-    -- for the derivation from the global-form bound, since the global form
-    -- holds throughout the tube.)
-    have hz_im : (fun k μ => (z k μ).im) = y := by
-      funext k μ
-      simp [hz_def, Complex.add_im, Complex.mul_im, Complex.I_im, Complex.ofReal_im]
-    -- We need z ∈ ForwardTube d n. With the derivation only valid for
-    -- imaginary parts in the cone, we need `_hK_in_cone` to use the global
-    -- bound. The global bound is over ForwardTube; without `z ∈ ForwardTube`
-    -- the bound is vacuous. The construction here threads `_hK_in_cone` to
-    -- show membership.
-    have hy_cone : InForwardCone d n y := _hK_in_cone y hy
+    -- z ∈ ForwardTube d n via the imaginary-part description and hK_in_cone.
+    have hy_cone : InForwardCone d n y := hK_in_cone y hy
     have hz_FT : z ∈ ForwardTube d n := by
-      -- z's imaginary differences come from y, which is in the cone by `hy_cone`.
       intro k
       simp only [hz_def]
       have h_im : ∀ k μ, (((x k μ : ℂ) + (y k μ : ℂ) * Complex.I).im) = y k μ := by
@@ -944,7 +941,9 @@ def toWightmanFunctions (Wcore : WightmanFunctionsCore d)
       have hyk : ‖y k μ‖ ≤ ‖y‖ :=
         le_trans (norm_le_pi_norm (y k) μ) (norm_le_pi_norm y k)
       linarith [h_per, hxk, hyk]
-    calc ‖W_analytic z‖
+    -- After field assignment, `(self.spectrum_condition n).choose = (Wcore.spectrum_condition n).choose`
+    -- definitionally, so the goal's W matches hgrowth's W.
+    calc ‖(Wcore.spectrum_condition n).choose z‖
         ≤ C_bd * (1 + ‖z‖) ^ N := hgrowth z hz_FT
       _ ≤ C_bd * (1 + (‖x‖ + max R 0)) ^ N := by
             gcongr; linarith [hRy, h_zx_le]

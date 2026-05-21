@@ -1,5 +1,48 @@
 # IBP / Schwartz-pairing rework plan for the cluster-proof dominator step
 
+> ## ⚠️ SCRATCH-ONLY / UNAPPROVED EXPLORATORY PLAN
+>
+> **Per PR-#88 review (Xi, 2026-05-21): this plan is *not* an approved
+> implementation route.** It documents an architectural exploration of
+> how the cluster-proof sorry *might* be closed via a GNS-Bochner
+> shortcut, including stub axioms (`analytic_state`,
+> `analytic_state_inner`, continuity/norm stubs) and a "Path C"
+> promotion strategy where those stubs would be shipped as vetted
+> production axioms if backfill stalls.
+>
+> **None of those routes have been approved.** Any production-axiom
+> adoption derived from this plan requires:
+> 1. Fresh, explicit approval from the maintainer (Xi) on the specific
+>    axiom statement(s) being proposed.
+> 2. Independent vetting (e.g., Gemini deep-think on the axiom's typing,
+>    strength, and vacuity — see `docs/cluster_axiom_vetting.md` for the
+>    project's established certification cadence).
+> 3. Demonstration that the axiom doesn't conflict with the project's
+>    "no QFT-specific production axioms" discipline established by the
+>    PR-#86 review.
+>
+> **Status update (2026-05-15 retrospective)**: the GNS-Bochner route
+> sketched below was vetted *and rejected* by Gemini deep-think after a
+> brief attempt — the proposed OS-reflected analytic state family was
+> shown contradictory (Cauchy-Schwarz forces ‖Φ_OS(τ)‖ = ∞ since
+> `Φ_OS(τ) = e^{+τH}φ(0)Ω` is unbounded on the Wightman GNS Hilbert
+> space). Details in `docs/gemini_query_OS_reflected_stubs.md` and
+> `docs/cluster_axiom_vetting.md` (2026-05-10 entry).
+>
+> The cluster sorry has subsequently been closed via a different,
+> narrowly-scoped Path-C-like axiom
+> (`ruelle_cluster_integral_DC_step`) on the separate branch
+> `r2e/cluster-ibp-rework`. That axiom and its Gemini vetting are tracked
+> separately. **Adoption of that axiom upstream still requires Xi's
+> explicit approval** — it has not been requested as of this writing.
+>
+> The rest of this document below is preserved for the architectural
+> record (why Tflat doesn't work; what the GNS-Bochner shortcut was
+> attempting; what tripped it up) but should be read as historical
+> exploration, not as a forward plan.
+
+---
+
 **Branch**: `r2e/ruelle-poly-bound-chain` (likely fork into `r2e/cluster-ibp-rework` for implementation).
 **Target**: close the production `sorry` at `OSReconstruction/Wightman/Reconstruction/WickRotation/RuelleClusterBound.lean:718` in the body of `W_analytic_cluster_integral_via_ruelle`.
 **Vetting status**: DRAFT (Rev. 3, 2026-05-10). **Original Tflat-based plan ruled out** by Gemini-deep-think vetting; pivoted to GNS-Bochner shortcut after project + sister-repo probe.
@@ -154,10 +197,14 @@ This is **Wightman-specific** — stays in OSReconstruction.
 
 **Do not attempt this construction directly.** In rigorous Wightman theory, `φ(0)` is **not** an operator on the Hilbert space — the field is only an operator-valued distribution: `φ(f)` exists for Schwartz `f`, but `φ(x)` at a point does not. Multiplying iterated `φ(z_k)` and interleaving with `S(y)` is an inescapable tarpit of dense-domain tracking, type-coercion failures, and ad-hoc operator products.
 
-**The fix — top-down execution**: stub the analytic-state map and its inner-product identity as axioms first, build layers 3 and 4 against the stubs to close the cluster sorry structurally, then return to layer 2 (or fall back to Path C) at the end. Specifically:
+**The proposed (NOT-APPROVED) top-down execution**: stub the analytic-state map and its inner-product identity as axioms first, build layers 3 and 4 against the stubs to close the cluster sorry structurally, then return to layer 2 (or fall back to Path C) at the end. Specifically:
 
 ```lean
--- Stub these first to unblock Layers 3 & 4 immediately:
+-- ⚠️ EXPLORATORY STUBS — NOT APPROVED AS PRODUCTION AXIOMS.
+-- 2026-05-15 retrospective: this stub family was vetted and rejected;
+-- the OS-reflected variant required to close the cluster identity is
+-- mathematically contradictory (corresponds to e^{+τH}, unbounded).
+-- Do NOT introduce these stubs without fresh maintainer approval.
 axiom analytic_state {n : ℕ} (u : Fin n → Fin (d + 1) → ℂ) (hu : u ∈ ForwardTube d n) :
     GNSHilbertSpace Wfn
 
@@ -169,10 +216,12 @@ axiom analytic_state_inner {n m : ℕ}
 ```
 Plus stubs for holomorphy and boundary recovery.
 
-**Why this works**:
-- Layers 3 (Bochner integration) and 4 (cluster-glue) consume the stubs as black boxes.
-- Closing `RuelleClusterBound.lean:718` becomes immediately tractable structurally — we get a Lean-typechecking proof that uses the stubs.
-- Returning to layer 2 to discharge the stubs with real definitions is independent work that can be done later (or skipped via Path C).
+**Why this was thought to work** (theoretical, has not been validated):
+- Layers 3 (Bochner integration) and 4 (cluster-glue) would consume the stubs as black boxes.
+- Closing `RuelleClusterBound.lean:718` would become immediately tractable structurally — we'd get a Lean-typechecking proof that uses the stubs.
+- Returning to layer 2 to discharge the stubs with real definitions is independent work.
+
+**What actually happened**: the stubs alone are insufficient — the cluster identity requires an OS-reflected variant on the left of the inner product, which Gemini deep-think showed cannot exist as a bounded `GNSHilbertSpace` vector (positive-energy spectrum makes `e^{+τH}` unbounded). The line of stubs is therefore architecturally blocked, not merely incomplete.
 
 **Layer 2 backfill strategy** (when ready to actually construct `Φ`):
 - The right approach is via the **GNS representation of the analytically continued Borchers algebra**, NOT via pointwise field at zero.
@@ -181,7 +230,7 @@ Plus stubs for holomorphy and boundary recovery.
 - This is non-trivial Lean engineering but at least does not collide with the operator-valued-distribution domain wall.
 - Reference: Streater-Wightman §3.3 (the reconstruction-side construction), Reed-Simon II §IX.8.
 
-**Soft 2-week budget**: if layer 2 backfill stalls past 2 weeks, the layer-2 stubs can be promoted to **vetted Path C axioms** (cleanly, since they're already isolated as axioms). Add to trust audit; OS4-cluster ships with one new vetted axiom instead of a fully-discharged construction.
+**Soft 2-week budget (HISTORICAL — NOT AN APPROVED ESCAPE HATCH)**: if layer 2 backfill stalls, the original plan was to promote the layer-2 stubs to "vetted Path C axioms" added to the trust audit. **Per PR-#88 review (Xi, 2026-05-21), this is not an approved cadence**: any production-axiom adoption requires (a) explicit Xi approval on the specific axiom statement, (b) independent vetting per the project's established certification, (c) consistency with the "no QFT-specific production axioms" PR-#86 discipline. The historical Path-C-promotion of `analytic_state` / `analytic_state_inner` is no longer on the table (those stubs are mathematically contradictory in the OS-reflected variant needed; see retrospective at top of this doc).
 
 #### Sub-pieces
 
@@ -262,7 +311,7 @@ If layer 1 is built project-internal instead (faster but less reusable): subtrac
 
 4. **Chain-repair PR**: open today against `xiyin137/main` with the three commits `ebd007f`, `050449b`, `973617a`. They are mathematically sound, independently useful relaxations; merging them prevents bit-rot while we tackle the Hilbert-space rewrite.
 
-5. **2-week timebox**: hard budget of **1–2 weeks** on layers 1+2 combined. If by end of week 2 layer 2's analytic-state backfill is stalling on operator-domain or coercion issues, **pull the ripcord**: promote the layer-2 stubs to vetted Path C axioms (`analytic_state` + `analytic_state_inner`), add to trust audit, ship the cluster sorry closed conditionally on the new axioms.
+5. **2-week timebox (HISTORICAL)**: the original plan budgeted 1–2 weeks on layers 1+2 combined, with a "ripcord" path promoting the layer-2 stubs to "vetted Path C axioms." Per PR-#88 review (Xi, 2026-05-21), this ripcord is **not an approved escape hatch** — production-axiom adoption requires explicit per-axiom approval. Moreover, the underlying mathematical issue with the OS-reflected variant of these stubs (see top-of-doc retrospective) makes the ripcord obsolete regardless. The historical text below is preserved for the architectural record but should not be treated as an authorized fallback.
 
 ### What's still open
 
@@ -443,7 +492,7 @@ The GNS-Bochner pivot IS Lean-feasible against the proposed stubs, modulo the L2
 
 **Updated total**: 3–4 weeks, with the L2SpectralData construction being the highest-risk sub-piece.
 
-**Mitigation**: if option (a) for L2SpectralData stalls, fall back to (b) — promote to a stub axiom and ship with that as documented. This caps the L2SpectralData work at the same 2-week timebox.
+**Mitigation (HISTORICAL)**: the original plan listed promotion to a stub axiom as the fallback if option (a) stalled. Per PR-#88 review, that promotion is not pre-authorized; would require explicit approval as discussed at top of doc.
 
 ---
 
@@ -472,4 +521,4 @@ Once layer 1 is in hille-yosida and layer 2 in OSReconstruction:
 
 The 3–4 weeks is a real cost, but the infrastructure pays off for any future analytic-vector / spectral-decomposition work. For projects beyond OS4 cluster, layer 1 + layer 2 is a foundational layer.
 
-**Pragmatic alternative if 3–4 weeks is too much**: drop to Path C (axiomatize the joint-integral cluster directly, ~3–5 days ship). The infrastructure benefit is forfeited but OS4 closes faster. Add to the trust audit and vet via Gemini.
+**Pragmatic alternative (HISTORICAL)**: the original plan listed "drop to Path C (axiomatize the joint-integral cluster directly)" as a 3-5 day fallback. **Per PR-#88 review (Xi, 2026-05-21), Path-C-style production-axiom adoption is not pre-authorized**; it requires explicit per-axiom approval and independent vetting (see top-of-doc retrospective). Do not interpret this paragraph as license to ship a new QFT-specific axiom without that approval cadence.
