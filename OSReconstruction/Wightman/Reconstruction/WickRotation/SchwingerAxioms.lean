@@ -4,6 +4,7 @@ Released under Apache 2.0 license.
 Authors: Michael Douglas, ModularPhysics Contributors
 -/
 import OSReconstruction.Mathlib429Compat
+import OSReconstruction.Wightman.Reconstruction.WickRotation.ForwardTubeLorentz
 import OSReconstruction.Wightman.Reconstruction.WickRotation.SchwingerTemperedness
 import OSReconstruction.ComplexLieGroups.D1OrbitSet
 import OSReconstruction.ComplexLieGroups.Connectedness.BHWPermutation.JostWitnessGeneralSigma
@@ -2361,6 +2362,51 @@ private theorem hermitianRealOverlap_nonempty_of_two_le
     ⟨x, _, hxET, hrevET⟩
   exact ⟨x, hxET, by simpa [BHW.realEmbed] using hrevET⟩
 
+/-- The partial OS reflection map on `NPointDomain d (n + m)`: reverse the first `n`
+    indices and apply time-reflection `θ` to them, leaving the last `m` indices fixed.
+
+    Pointwise: for `i < n`, `partialOSReflection x i = θ(x_{n-1-i})`;
+    for `i ≥ n`, `partialOSReflection x i = x_i`. -/
+private def partialOSReflection (n m : ℕ) (x : NPointDomain d (n + m)) :
+    NPointDomain d (n + m) :=
+  fun i => if h : i.val < n
+    then timeReflection d (x ⟨n - 1 - i.val, by omega⟩)
+    else x i
+
+/-- Unfold the constructed Wick-rotated Schwinger family inside the OS inner
+product, under positive-time support hypotheses that put every OS tensor product
+on the honest zero-diagonal branch. -/
+theorem OSInnerProduct_constructSchwinger_unfolded
+    (Wfn : WightmanFunctions d)
+    (F G : BorchersSequence d)
+    (hsuppF : ∀ n,
+      tsupport ((F.funcs n : SchwartzNPoint d n) : NPointDomain d n → ℂ) ⊆
+        OrderedPositiveTimeRegion d n)
+    (hsuppG : ∀ n,
+      tsupport ((G.funcs n : SchwartzNPoint d n) : NPointDomain d n → ℂ) ⊆
+        OrderedPositiveTimeRegion d n) :
+    OSInnerProduct d (constructSchwingerFunctions Wfn) F G =
+      ∑ n ∈ Finset.range (F.bound + 1),
+        ∑ m ∈ Finset.range (G.bound + 1),
+          ∫ x : NPointDomain d (n + m),
+            F_ext_on_translatedPET_total Wfn
+              (fun k => wickRotatePoint (x k)) *
+            ((F.funcs n).osConjTensorProduct (G.funcs m)) x := by
+  classical
+  unfold OSInnerProduct constructSchwingerFunctions wickRotatedBoundaryPairing
+  apply Finset.sum_congr rfl
+  intro n _hn
+  apply Finset.sum_congr rfl
+  intro m _hm
+  have hzero :
+      VanishesToInfiniteOrderOnCoincidence
+        ((F.funcs n).osConjTensorProduct (G.funcs m)) :=
+    VanishesToInfiniteOrderOnCoincidence_osConjTensorProduct_of_tsupport_subset_orderedPositiveTimeRegion
+      (d := d) (f := F.funcs n) (g := G.funcs m)
+      (hsuppF n) (hsuppG m)
+  rw [ZeroDiagonalSchwartz.coe_ofClassical_of_vanishes
+    ((F.funcs n).osConjTensorProduct (G.funcs m)) hzero]
+
 /-- TranslatedPET membership for the back-forward Wick configuration.
 
     For `x_n ∈ OrderedPositiveTimeRegion d n` and
@@ -2566,7 +2612,8 @@ private theorem mixed_back_forward_wick_F_ext_eq_W_analytic_BHW
     F_ext_on_translatedPET_total_eq_on_PET Wfn _ hc
   exact h1.trans h2
 
-/-- Reflection positivity for the Wick-restricted Schwinger family.
+/-
+Reflection positivity for the Wick-restricted Schwinger family.
 
     This is the honest replacement for the deleted same-test-function bridge
     `OSInnerProduct = WightmanInnerProduct`.  That bridge is false: the
@@ -2588,21 +2635,13 @@ private theorem mixed_back_forward_wick_F_ext_eq_W_analytic_BHW
     Hilbert-space-isomorphism theorem must state the intervening map explicitly.
 
     Ref: OS I, Section 3 and Section 5; Glimm-Jaffe Ch. 19;
-    Reed-Simon II, Section IX.8. -/
-theorem schwingerExtension_os_reflection_positive_from_spectralLaplace
-    (Wfn : WightmanFunctions d)
-    (F : BorchersSequence d)
-    (hsupp : ∀ n, tsupport ((F.funcs n : SchwartzNPoint d n) : NPointDomain d n → ℂ) ⊆
-      OrderedPositiveTimeRegion d n) :
-    (OSInnerProduct d (constructSchwingerFunctions Wfn) F F).re ≥ 0 := by
-  sorry
+    Reed-Simon II, Section IX.8.
 
-theorem wickRotatedBoundaryPairing_reflection_positive (Wfn : WightmanFunctions d)
-    (F : BorchersSequence d)
-    (hsupp : ∀ n, tsupport ((F.funcs n : SchwartzNPoint d n) : NPointDomain d n → ℂ) ⊆
-      OrderedPositiveTimeRegion d n) :
-    (OSInnerProduct d (constructSchwingerFunctions Wfn) F F).re ≥ 0 :=
-  schwingerExtension_os_reflection_positive_from_spectralLaplace Wfn F hsupp
+    The proved reflection-positivity theorems with the historical public names
+    are downstream in `RToESchwingerAxiomsCompatibility.lean`.  This file is
+    upstream of the Section 4.3 R→E proof lane, so importing that proof here
+    would create a cycle through the OS→Wightman files.
+-/
 
 /-- F_ext is permutation-invariant on TranslatedPET. Same sorry pattern. -/
 theorem F_ext_permutation_invariant_translated (Wfn : WightmanFunctions d) (n : ℕ)
@@ -2751,7 +2790,7 @@ private theorem wightman_perm_invariant_on_jost_support (Wfn : WightmanFunctions
         (hxJ.2 i ⟨i.val + 1, hi⟩ hij)
     have hswap0 :
         Wfn.W n gτ = Wfn.W n (permuteSchwartz (Equiv.swap i ⟨i.val + 1, hi⟩) gτ) := by
-      refine Wfn.locally_commutative n i hi gτ
+      refine (WightmanFunctions.locally_commutative Wfn) n i hi gτ
         (permuteSchwartz (Equiv.swap i ⟨i.val + 1, hi⟩) gτ) hsupp ?_
       intro x
       change permuteSchwartz (Equiv.swap i ⟨i.val + 1, hi⟩) gτ x =
