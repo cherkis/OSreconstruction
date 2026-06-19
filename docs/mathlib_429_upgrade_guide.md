@@ -88,6 +88,23 @@ Import with `import OSReconstruction.Mathlib429Compat` in files that need these.
 **Issue:** `LinearMap.CompatibleSMul` needs `ContinuousSMul`.
 **Fix:** `import OSReconstruction.Mathlib429Compat`.
 
+### 16. TubeBoundaryValueExistence.lean (~lines 462, 724, in `hasDerivAt_tubeSlice_ray`)
+**Issue:** `(hF_at.hasFDerivAt.restrictScalars ℝ)` re-synthesizes
+`IsScalarTower ℝ ℂ (Fin m → ℂ)`, which fails under the strict default even though
+the binder `[IsScalarTower ℝ ℂ (Fin m → ℂ)]` and a standalone `infer_instance`
+both succeed.
+**Fix:** `set_option backward.isDefEq.respectTransparency false in` on the whole
+declaration (chained after the existing `maxHeartbeats`).
+**Why not a global instance:** A registered global instance does **not** fix this.
+`restrictScalars` generates its required `IsScalarTower` argument freshly in
+*unfolded* form (`Module ℝ (Fin m → ℂ) → toSMul`), and instance lookup must unify
+a candidate's SMul arguments against that — a unification that runs at the strict
+default transparency regardless of how the instance was built. The Pi wrapper makes
+those terms defeq-but-not-syntactic, so no registered instance matches. (The base
+`IsScalarTower ℝ ℂ ℂ` compat instance works only because there is no Pi wrapper.)
+The relaxation must therefore happen at the *synthesis site*, hence the
+per-declaration `set_option` rather than a compat instance.
+
 ### Cascading files (also need fixes)
 - **GeodesicConvexity.lean** — `star_mul'` simp change
 - **JostPoints.lean** — `simp [p]; omega` for Fin bound

@@ -320,6 +320,11 @@ theorem tubeSlice_temperedDistribution
   simpa [Fε, tubeSlice] using hT_ε φ
 
 set_option maxHeartbeats 400000 in
+-- `restrictScalars ℝ` of the `ℂ`-derivative on `Fin m → ℂ` re-synthesizes
+-- `IsScalarTower ℝ ℂ (Fin m → ℂ)`; under Lean 4.29's strict default transparency
+-- the `NormedSpace ℝ ℂ` (via `InnerProductSpace`) SMul fails to unify at the use
+-- site, so we relax transparency for the whole declaration (cf. `Mathlib429Compat`).
+set_option backward.isDefEq.respectTransparency false in
 /-- **Derivative of the tube slice along a positive ray.**
 
     The slice map is differentiated by applying
@@ -456,8 +461,6 @@ theorem hasDerivAt_tubeSlice_ray
       exact (hF_hol _ (hslice_mem hτ x)).differentiableAt
         ((SCV.tubeDomain_isOpen hC_open).mem_nhds (hslice_mem hτ x))
     have hcomp := by
-      haveI : IsScalarTower ℝ ℂ (Fin m → ℂ) := by
-        infer_instance
       simpa using
         (hF_at.hasFDerivAt.restrictScalars ℝ).comp_hasDerivAt τ hslice_deriv
     have hderiv :
@@ -719,8 +722,6 @@ theorem hasDerivAt_tubeSlice_ray
         exact (hF_hol _ (hslice_mem hτ0 x)).differentiableAt
           ((SCV.tubeDomain_isOpen hC_open).mem_nhds (hslice_mem hτ0 x))
       have hG_fderiv := by
-        haveI : IsScalarTower ℝ ℂ (Fin m → ℂ) := by
-          infer_instance
         simpa [G] using (hF_at.hasFDerivAt.restrictScalars ℝ).comp x hsliceX
       have hderiv_vec :
           (((fderiv ℂ F (slice τ₀ x)).restrictScalars ℝ).comp A) η = G' x := by
