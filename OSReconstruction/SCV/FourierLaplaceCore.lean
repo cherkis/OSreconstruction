@@ -144,10 +144,10 @@ theorem smoothCutoff_complex_hasTemperateGrowth :
         rw [Set.mem_Icc]
         constructor
         · by_contra h
-          push_neg at h
+          push Not at h
           exact hξ (hDerivNeg (Set.mem_Iio.mpr h))
         · by_contra h
-          push_neg at h
+          push Not at h
           exact hξ (hDerivPos (Set.mem_Ioi.mpr h))
       -- Continuous and compactly supported → bounded
       have hcont : Continuous (iteratedDeriv (n + 1) (fun ξ : ℝ => (smoothCutoff ξ : ℂ))) := by

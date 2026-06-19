@@ -49,7 +49,7 @@ private theorem borchersConj_continuous_bvt {n : ℕ} :
           simp [SchwartzMap.conj_apply]
         map_smul' := fun c f => by
           simpa using (SchwartzMap.conj_smul (c := (c : ℂ)) f) }
-    exact Seminorm.continuous_from_bounded
+    exact WithSeminorms.continuous_of_isBounded
       (schwartz_withSeminorms ℝ (NPointDomain d n) ℂ)
       (schwartz_withSeminorms ℝ (NPointDomain d n) ℂ)
       conjL (fun q => by

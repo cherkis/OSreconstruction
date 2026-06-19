@@ -85,17 +85,17 @@ private theorem sinusoidal_positivity {A B b : ℝ} (hA : 0 < A)
       simp [mul_one, hend]
     have h2 : 0 < Real.sin (b * 1 + φ) := by
       by_contra hx
-      push_neg at hx
+      push Not at hx
       linarith [mul_nonpos_of_nonneg_of_nonpos (le_of_lt hC_pos) hx]
     rwa [mul_one] at h2
   have ⟨hbφ_pos, hbφ_lt⟩ : 0 < b + φ ∧ b + φ < Real.pi := by
     constructor
     · by_contra h
-      push_neg at h
+      push Not at h
       linarith [Real.sin_nonpos_of_nonpos_of_neg_pi_le h
         (by linarith [abs_lt.mp hb] : -(Real.pi) ≤ b + φ)]
     · by_contra h
-      push_neg at h
+      push Not at h
       have : Real.sin (b + φ) = -Real.sin (b + φ - Real.pi) := by
         conv_lhs =>
           rw [show b + φ = (b + φ - Real.pi) + Real.pi by ring]
@@ -105,7 +105,7 @@ private theorem sinusoidal_positivity {A B b : ℝ} (hA : 0 < A)
   have hbt_pos : 0 < b * t + φ := by
     by_cases hb_nn : 0 ≤ b
     · linarith [mul_nonneg hb_nn ht0]
-    · push_neg at hb_nn
+    · push Not at hb_nn
       nlinarith
   have hbt_lt : b * t + φ < Real.pi := by
     by_cases hb_nn : 0 ≤ b

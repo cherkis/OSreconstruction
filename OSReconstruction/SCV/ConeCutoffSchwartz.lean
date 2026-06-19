@@ -195,7 +195,7 @@ theorem dualConeFlat_pairing_pos_of_open
     (hξ_ne : ξ ≠ 0) :
     0 < ∑ i, y i * ξ i := by
   by_contra h
-  push_neg at h
+  push Not at h
   have h_nn := hξ y hy
   have h_zero : ∑ i, y i * ξ i = 0 := le_antisymm h h_nn
   -- Since C is open and y ∈ C, there exists ε > 0 with B(y,ε) ∩ C nonempty
@@ -792,7 +792,7 @@ theorem psiZRaw_iteratedFDeriv_decay
     simp only [hiter_zero, norm_zero, mul_zero]
     exact mul_nonneg hLeibConst_nonneg (mul_nonneg (Real.exp_pos _).le hM_pos.le)
   · -- Case 2: inside support region, use Leibniz + exponential decay
-    push_neg at hfar
+    push Not at hfar
     -- Leibniz bound
     have hLeib : ‖iteratedFDeriv ℝ n (psiZRaw χ R z) ξ‖ ≤
         ∑ i ∈ Finset.range (n + 1),

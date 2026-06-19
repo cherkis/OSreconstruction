@@ -146,7 +146,7 @@ theorem minkowskiInner_orthogonal_to_timelike_nonneg
     -- Spatial norm of ξ must be positive (otherwise ξ₀η₀ = spatialInner = 0, but ξ₀ ≠ 0, η₀ > 0)
     have hξ_spatial_pos : spatialNormSq d ξ > 0 := by
       by_contra h
-      push_neg at h
+      push Not at h
       have h0 := spatialNormSq_nonneg d ξ
       have heq : spatialNormSq d ξ = 0 := le_antisymm h h0
       -- If spatial norm = 0, then each spatial component = 0

@@ -700,7 +700,7 @@ theorem osConj_onePointToFin1_tsupport_orderedPositiveTime_local
   refine ⟨?_, fun j hij => absurd hij (by omega)⟩
   rw [Fin.eq_zero i]
   by_contra h_neg
-  push_neg at h_neg
+  push Not at h_neg
   have ⟨δ, hδ_pos, hδ⟩ : ∃ δ : ℝ, 0 < δ ∧
       tsupport (χ : SpacetimeDim d → ℂ) ⊆ {x : SpacetimeDim d | x 0 ≤ -δ} := by
     by_cases hempty : tsupport (χ : SpacetimeDim d → ℂ) = ∅

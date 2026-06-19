@@ -2665,7 +2665,7 @@ theorem VanishesToInfiniteOrderOnCoincidence.zero {d n : ℕ} :
     VanishesToInfiniteOrderOnCoincidence (0 : SchwartzNPoint d n) := by
   intro k x hx
   exact congrFun
-    (iteratedFDeriv_zero_fun (𝕜 := ℝ) (n := k)
+    (iteratedFDeriv_fun_zero (𝕜 := ℝ) (n := k)
       (E := NPointDomain d n) (F := ℂ)) x
 
 theorem VanishesToInfiniteOrderOnCoincidence.add {d n : ℕ}

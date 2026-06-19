@@ -3,7 +3,7 @@ Copyright (c) 2025 ModularPhysics Contributors. All rights reserved.
 Released under Apache 2.0 license.
 Authors: ModularPhysics Contributors
 -/
-import Mathlib.MeasureTheory.Measure.CharacteristicFunction
+import Mathlib.MeasureTheory.Measure.CharacteristicFunction.Basic
 import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
 import Mathlib.MeasureTheory.Constructions.Projective
 import Mathlib.MeasureTheory.Measure.Tight
@@ -161,7 +161,7 @@ theorem IsPositiveDefiniteFn.norm_le_eval_zero (hφ : IsPositiveDefiniteFn φ) (
     -- Derive (φ 0).re ≥ ‖φ x‖ by dividing by 2‖φ x‖² > 0
     suffices hsuff : 0 ≤ (φ 0).re - ‖φ x‖ by linarith
     by_contra h_neg
-    push_neg at h_neg
+    push Not at h_neg
     -- Substitute hnormsq into h_re via helper equalities
     have hp : (φ 0).re * (φ x).re ^ 2 + (φ 0).re * (φ x).im ^ 2 =
         (φ 0).re * ‖φ x‖ ^ 2 := by rw [← mul_add, hnormsq]

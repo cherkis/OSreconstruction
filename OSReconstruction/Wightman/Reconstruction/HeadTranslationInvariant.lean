@@ -194,7 +194,7 @@ theorem exists_headTranslate_positive_tsupport_of_hasCompactSupport
   -- ⟹ |x₀ + v₀| < R ⟹ |x₀ - (R+1)| < R ⟹ x₀ > 1
   -- Actually: x ∈ tsupport of translate means there's no open nhd of x where translate = 0
   -- Contrapositive: if x₀ ≤ 0, show x ∉ tsupport by showing translate = 0 near x
-  by_contra h_neg; push_neg at h_neg
+  by_contra h_neg; push Not at h_neg
   -- For any y with y₀ ≤ 1: ‖y + v‖ ≥ |y₀ + v₀| = |y₀ - (R+1)| ≥ R, so F(y+v) = 0
   have h_vanish : ∀ y : Fin (n + 1) → ℝ, y 0 ≤ 1 →
       (F : (Fin (n + 1) → ℝ) → ℂ) (y + v) = 0 := by

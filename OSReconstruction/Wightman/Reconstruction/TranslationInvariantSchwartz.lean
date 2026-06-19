@@ -1916,7 +1916,7 @@ theorem iteratedFDeriv_cutoff_compl_radius_add_one_eq_zero_on_closedBall {m l : 
         iteratedFDerivWithin ℝ l g Set.univ x =
           iteratedFDerivWithin ℝ l (fun _ : Fin m → ℝ => (0 : ℂ)) Set.univ x :=
       (hEq.filter_mono inf_le_left).iteratedFDerivWithin_eq hx0 l
-    simpa [iteratedFDerivWithin_univ, iteratedFDeriv_zero_fun] using hiterWithin
+    simpa [iteratedFDerivWithin_univ, iteratedFDeriv_fun_zero] using hiterWithin
   simpa [g] using hiter
 
 private theorem norm_iteratedFDeriv_cutoff_compl_radius_le_uniform {m n : ℕ} :
@@ -2787,7 +2787,7 @@ theorem exists_eq_const_integralCLM_of_translationInvariant {m : ℕ}
   · classical
     have hTne : ∃ φ : SchwartzMap (Fin m → ℝ) ℂ, T φ ≠ 0 := by
       by_contra hnone
-      push_neg at hnone
+      push Not at hnone
       apply hT0
       ext φ
       exact hnone φ
@@ -2847,7 +2847,7 @@ theorem exists_eq_const_integralCLM_of_translationInvariant_one
   · classical
     obtain ⟨φ, hφ⟩ : ∃ φ : SchwartzMap (Fin 1 → ℝ) ℂ, T φ ≠ 0 := by
       by_contra hnone
-      push_neg at hnone
+      push Not at hnone
       apply hT0
       ext ψ
       exact hnone ψ

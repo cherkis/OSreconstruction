@@ -130,7 +130,7 @@ private lemma seminorm_eq_zero_of_fin0 {a b : ℕ} (hab : (a, b) ≠ (0, 0))
   by_cases ha : a ≠ 0
   · rw [show ‖(default : EuclideanSpace ℝ (Fin 0))‖ = 0 from by
       simp [EuclideanSpace.norm_eq, Finset.univ_eq_empty], zero_pow ha, zero_mul]
-  · push_neg at ha; subst ha; simp only [pow_zero, one_mul]
+  · push Not at ha; subst ha; simp only [pow_zero, one_mul]
     have hb : b ≠ 0 := by intro hb; exact hab (by ext <;> simp [*])
     rw [show iteratedFDeriv ℝ b (⇑f) default = 0 from by
       ext m; exact (iteratedFDeriv ℝ b (⇑f) default).map_coord_zero ⟨0, by omega⟩
@@ -170,7 +170,7 @@ private def evalLM₀ :
 /-- The evaluation linear map is continuous in the Schwartz topology: it is
     bounded by `seminorm ℝ 0 0`, which is continuous. -/
 private lemma evalLM₀_continuous : Continuous evalLM₀ := by
-  apply Seminorm.continuous_from_bounded
+  apply WithSeminorms.continuous_of_isBounded
     (schwartz_withSeminorms ℝ (EuclideanSpace ℝ (Fin 0)) ℝ)
     (norm_withSeminorms ℝ ℝ)
   intro i; refine ⟨{⟨0, 0⟩}, 1, ?_⟩

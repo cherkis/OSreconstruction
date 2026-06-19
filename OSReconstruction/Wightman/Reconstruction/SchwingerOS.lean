@@ -100,7 +100,7 @@ def SchwartzNPoint.osConjRLM {n : ℕ} :
         map_smul' := by
           intro c f
           simpa using (SchwartzNPoint.osConj_smul (d := d) (c : ℂ) f) }
-    apply Seminorm.continuous_from_bounded
+    apply WithSeminorms.continuous_of_isBounded
       (schwartz_withSeminorms ℝ (NPointDomain d n) ℂ)
       (schwartz_withSeminorms ℝ (NPointDomain d n) ℂ)
       L

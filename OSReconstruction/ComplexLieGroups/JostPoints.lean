@@ -615,7 +615,7 @@ private lemma wickMatrix_det (d : ℕ) (hd : 1 ≤ d) :
       rw [show ∏ j, wickMatrix d hd (σ j) j = 0 from
         Finset.prod_eq_zero (f := fun j => wickMatrix d hd (σ j) j)
           (Finset.mem_univ i) hi, smul_zero]
-    by_contra hall; push_neg at hall
+    by_contra hall; push Not at hall
     apply hσ; ext j
     by_cases hj0 : j = 0
     · subst hj0

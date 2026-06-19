@@ -88,7 +88,7 @@ theorem euclidean_coord_lineDeriv_transport {m : ℕ}
         (EuclideanSpace.single i (1 : ℝ)) =
       ((Pi.single i (1 : ℝ)) : Fin m → ℝ) := by
     ext j
-    simp [EuclideanSpace.single_apply, Pi.single_apply]
+    simp [PiLp.single_apply, Pi.single_apply]
   simpa [hdir] using
     (SchwartzMap.lineDerivOp_compCLMOfContinuousLinearEquiv (𝕜 := ℂ)
       (m := EuclideanSpace.single i (1 : ℝ))
@@ -109,7 +109,7 @@ theorem pi_coord_lineDeriv_transport {m : ℕ}
         (((Pi.single i (1 : ℝ)) : Fin m → ℝ)) =
       EuclideanSpace.single i (1 : ℝ) := by
     ext j
-    simp [EuclideanSpace.single_apply, Pi.single_apply]
+    simp [PiLp.single_apply, Pi.single_apply]
   simpa [hdir] using
     (SchwartzMap.lineDerivOp_compCLMOfContinuousLinearEquiv (𝕜 := ℂ)
       (m := ((Pi.single i (1 : ℝ)) : Fin m → ℝ))

@@ -210,7 +210,7 @@ lemma wickMatrixJ_det (d : ℕ) (j : Fin (d + 1)) (hj : j ≠ 0) :
           Finset.prod_eq_zero (f := fun k => wickMatrixJ d j hj (σ k) k)
             (Finset.mem_univ i) hi, smul_zero]
     by_contra hall
-    push_neg at hall
+    push Not at hall
     apply hσ
     ext i
     by_cases hi0 : i = 0

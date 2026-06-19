@@ -309,7 +309,7 @@ theorem norm_le_splitFirst_add_splitLast (m k : ℕ) (x : Fin (m + k) → E) :
     rw [heq]
     exact (norm_le_pi_norm _ _).trans (le_add_of_nonneg_right (norm_nonneg _))
   · -- j is in last k components: ‖x j‖ ≤ ‖splitLast x‖ ≤ sum
-    push_neg at hj
+    push Not at hj
     have hjk : j.val - m < k := by omega
     have heq : x j = splitLast m k x ⟨j.val - m, hjk⟩ := by
       show x j = x (Fin.natAdd m ⟨j.val - m, hjk⟩)

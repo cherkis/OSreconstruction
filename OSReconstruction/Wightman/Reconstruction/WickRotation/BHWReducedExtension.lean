@@ -1076,7 +1076,7 @@ private theorem backwardShiftLM_pow_apply (n d : ℕ) :
     simp only [backwardShiftLM, LinearMap.coe_mk, AddHom.coe_mk]
     by_cases hkm : k.val < m
     · simp [hkm, show k.val < m + 1 from by omega]
-    · push_neg at hkm
+    · push Not at hkm
       simp only [show ¬(k.val < m) from by omega, ↓reduceIte]
       by_cases hkm1 : k.val - m = 0
       · simp [hkm1, show k.val < m + 1 from by omega]

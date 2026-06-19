@@ -81,7 +81,7 @@ theorem osConj_onePointToFin1_tsupport_orderedPositiveTime {d : ℕ} [NeZero d]
   -- ⟹ χ(timeReflectionN(v) 0) = 0 in a neighborhood
   -- ⟹ osConj(onePointToFin1 χ)(w) = 0 for w near v
   -- ⟹ v ∉ tsupport(osConj(onePointToFin1 χ)), contradiction
-  by_contra h_neg; push_neg at h_neg
+  by_contra h_neg; push Not at h_neg
   -- Step 1: Compact tsupport ⊆ {x₀ < 0} ⟹ ∃ δ > 0, tsupport ⊆ {x₀ ≤ -δ}
   have ⟨δ, hδ_pos, hδ⟩ : ∃ δ : ℝ, 0 < δ ∧
       tsupport (χ : SpacetimeDim d → ℂ) ⊆ {x : SpacetimeDim d | x 0 ≤ -δ} := by

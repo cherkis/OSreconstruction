@@ -64,7 +64,7 @@ theorem sinusoidal_pos_of_endpoints_pos
     constructor <;> [nlinarith [abs_le.mp hβ]; nlinarith [abs_le.mp hβ]]
   have hβψ_lo : -(π / 2) < β - ψ := by
     by_contra h
-    push_neg at h
+    push Not at h
     have hle : π / 2 ≤ -(β - ψ) := by linarith
     have hhi : -(β - ψ) ≤ π + π / 2 := by
       have := hβψ_range.1
@@ -72,7 +72,7 @@ theorem sinusoidal_pos_of_endpoints_pos
     linarith [cos_nonpos_of_pi_div_two_le_of_le hle hhi, cos_neg (β - ψ)]
   have hβψ_hi : β - ψ < π / 2 := by
     by_contra h
-    push_neg at h
+    push Not at h
     have hhi : β - ψ ≤ π + π / 2 := by
       have := hβψ_range.2
       linarith

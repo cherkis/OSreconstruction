@@ -1220,10 +1220,10 @@ private lemma exists_avoiding_finite_hyperplanes (m : ℕ) (_hm : 2 ≤ m)
         · exact hwa
         · exact hw s hs⟩
     · -- w is orthogonal to a. Need to perturb.
-      push_neg at hwa
+      push Not at hwa
       -- Since a ≠ 0, there exists μ with a μ ≠ 0
       have ⟨μ₀, hμ₀⟩ : ∃ μ₀, a μ₀ ≠ 0 := by
-        by_contra h; push_neg at h; exact hS_a (funext h)
+        by_contra h; push Not at h; exact hS_a (funext h)
       -- Let e_μ₀ be the standard basis vector
       let e : Fin m → ℝ := fun ν => if ν = μ₀ then 1 else 0
       -- Bad t values: t = 0 (for a) and t = -⟨w,s⟩/(s μ₀) for s ∈ S' with s μ₀ ≠ 0
@@ -1521,7 +1521,7 @@ lemma exists_rotation_distinct_positive_times {n : ℕ}
     by_cases h : i < j
     · exact hw _ (Finset.mem_image.mpr ⟨⟨i, j⟩,
         Finset.mem_filter.mpr ⟨Finset.mem_univ _, h⟩, rfl⟩)
-    · push_neg at h
+    · push Not at h
       have h' : j < i := lt_of_le_of_ne h (Ne.symm hij)
       have hmem : (fun μ => x j μ - x i μ) ∈ diffs :=
         Finset.mem_image.mpr ⟨⟨j, i⟩,
@@ -1542,7 +1542,7 @@ lemma exists_rotation_distinct_positive_times {n : ℕ}
   -- ∑ u μ ^ 2 > 0 from u ≠ 0
   have hnorm_sq_pos : 0 < ∑ μ : Fin (d + 1), u μ ^ 2 := by
     by_contra h
-    push_neg at h
+    push Not at h
     have h0 : ∀ μ, u μ = 0 := by
       intro μ
       have hμ : u μ ^ 2 ≤ ∑ ν : Fin (d + 1), u ν ^ 2 :=

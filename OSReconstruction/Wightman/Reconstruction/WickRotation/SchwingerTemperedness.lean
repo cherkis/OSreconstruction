@@ -847,7 +847,7 @@ theorem hasForwardTubeGrowth_of_wightman {d : ℕ} [NeZero d]
       · ext y; simp
       · exact coincidenceLocus_one_eq_empty (d := d)
     simp [hset_empty]
-  push_neg at hn
+  push Not at hn
   haveI : NeZero n := ⟨by omega⟩
   have h01 : (⟨0, by omega⟩ : Fin n) ≠ (⟨1, hn⟩ : Fin n) := by
     rw [Fin.ne_iff_vne]
@@ -1380,7 +1380,7 @@ theorem wick_rotated_kernel_mul_zeroDiagonal_integrable {d n : ℕ} [NeZero d]
     -- Derive n ≤ 1 from emptiness of CoincidenceLocus
     have hn_le : n ≤ 1 := by
       by_contra h
-      push_neg at h
+      push Not at h
       apply hcoin
       haveI : NeZero n := ⟨by omega⟩
       refine ⟨fun _ => 0, 0, ⟨1, by omega⟩, ?_, rfl⟩
@@ -1415,7 +1415,7 @@ theorem wick_rotated_kernel_mul_zeroDiagonal_integrable {d n : ℕ} [NeZero d]
           simp [xs₁, a₁, A₁]; linarith [neg_abs_le (x 0 0)]
         have hfwd₁ : (fun k => wickRotatePoint (xs₁ k)) ∈ ForwardTube d 1 :=
           euclidean_ordered_in_forwardTube (fun k => xs₁ k)
-            (fun k j hkj => by fin_cases k <;> fin_cases j <;> simp_all [Fin.lt_iff_val_lt_val])
+            (fun k j hkj => by fin_cases k <;> fin_cases j <;> simp_all [Fin.lt_def])
             (fun k => by fin_cases k; exact hpos₁)
         have hxs₁_pet : (fun k => wickRotatePoint (xs₁ k)) ∈ PermutedExtendedTube d 1 :=
           euclidean_distinct_in_permutedTube xs₁
@@ -1438,7 +1438,7 @@ theorem wick_rotated_kernel_mul_zeroDiagonal_integrable {d n : ℕ} [NeZero d]
         -- The reference point x₀ also has wick(x₀) ∈ ForwardTube d 1
         have hfwd₀ : (fun k => wickRotatePoint (x₀ k)) ∈ ForwardTube d 1 :=
           euclidean_ordered_in_forwardTube (fun k => x₀ k)
-            (fun k j hkj => by fin_cases k <;> fin_cases j <;> simp_all [Fin.lt_iff_val_lt_val])
+            (fun k j hkj => by fin_cases k <;> fin_cases j <;> simp_all [Fin.lt_def])
             (fun k => by fin_cases k; simp [x₀, Pi.single_apply])
         -- W_analytic(wick(xs₁)) = W_analytic(wick(x₀)) by translation invariance
         have htransl_const :
@@ -1990,7 +1990,7 @@ theorem constructedSchwinger_tempered_zeroDiagonal (Wfn : WightmanFunctions d) (
   have hK_meas : MeasureTheory.AEStronglyMeasurable K MeasureTheory.volume :=
     bhw_euclidean_kernel_measurable Wfn
   by_cases hcoin : (CoincidenceLocus d n).Nonempty
-  · -- n ≥ 2: use WithSeminorms on ZeroDiagonalSchwartz + Seminorm.cont_withSeminorms_normedSpace
+  · -- n ≥ 2: use WithSeminorms on ZeroDiagonalSchwartz + WithSeminorms.continuous_normedSpace_rng
     -- Step 1: Get growth bound from WightmanFunctions
     obtain ⟨C_bd, N, q, hC_pos, hgrowth⟩ := (hasForwardTubeGrowth_of_wightman Wfn) n
     -- Step 2: WithSeminorms on ZeroDiagonalSchwartz d n (via induced topology)
@@ -2050,7 +2050,7 @@ theorem constructedSchwinger_tempered_zeroDiagonal (Wfn : WightmanFunctions d) (
     let C_sem_val : ℝ := C_bd * nR ^ N * (2 ^ (deg_M + q + 1) / (Nat.factorial q : ℝ)) * I_tail
     have hC_sem_nonneg : 0 ≤ C_sem_val := by positivity
     let C_sem : NNReal := ⟨C_sem_val, hC_sem_nonneg⟩
-    apply Seminorm.cont_withSeminorms_normedSpace ℂ hWS T
+    apply WithSeminorms.continuous_normedSpace_rng ℂ hWS T
     -- Use Finset.Iic (deg_M, q+1) since C_vanish uses (deg_M, q+1) seminorm
     refine ⟨Finset.Iic (deg_M, q + 1), C_sem, ?_⟩
     -- Prove: (normSeminorm ℂ ℂ).comp T ≤ C_sem • (Finset.Iic (deg_M, q+1)).sup
@@ -2260,7 +2260,7 @@ theorem constructedSchwinger_tempered_zeroDiagonal (Wfn : WightmanFunctions d) (
               hdom_int hpointwise
         _ = C_ptwise * sem_f * I_tail := by rw [MeasureTheory.integral_const_mul]
         _ = C_sem_val * sem_f := by simp only [C_ptwise, C_sem_val]; ring
-    -- Step 4e: Match the goal from Seminorm.cont_withSeminorms_normedSpace
+    -- Step 4e: Match the goal from WithSeminorms.continuous_normedSpace_rng
     -- Goal: ((normSeminorm ℂ ℂ).comp T) f ≤
     --   (↑C_sem • (Finset.Iic ...).sup ((schwartzSeminormFamily ..).comp subtype)) f
     -- LHS = ‖T f‖, RHS = C_sem_val * ((s.sup (sem.comp subtype)) f)
@@ -2279,7 +2279,7 @@ theorem constructedSchwinger_tempered_zeroDiagonal (Wfn : WightmanFunctions d) (
     -- Derive n ≤ 1 from emptiness of CoincidenceLocus
     have hn_le : n ≤ 1 := by
       by_contra h
-      push_neg at h
+      push Not at h
       apply hcoin
       haveI : NeZero n := ⟨by omega⟩
       refine ⟨fun _ => 0, 0, ⟨1, by omega⟩, ?_, rfl⟩
@@ -2301,7 +2301,7 @@ theorem constructedSchwinger_tempered_zeroDiagonal (Wfn : WightmanFunctions d) (
         let v₀ : ℂ := K x₀
         have hfwd₀ : (fun k => wickRotatePoint (x₀ k)) ∈ ForwardTube d 1 :=
           euclidean_ordered_in_forwardTube (fun k => x₀ k)
-            (fun k j hkj => by fin_cases k <;> fin_cases j <;> simp_all [Fin.lt_iff_val_lt_val])
+            (fun k j hkj => by fin_cases k <;> fin_cases j <;> simp_all [Fin.lt_def])
             (fun k => by fin_cases k; simp [x₀, Pi.single_apply])
         have hkernel_ae : ∀ᵐ (x : NPointDomain d 1) ∂MeasureTheory.volume, K x = v₀ := by
           filter_upwards [ae_euclidean_points_in_translatedPET (d := d) (n := 1)] with x hx_pet
@@ -2313,7 +2313,7 @@ theorem constructedSchwinger_tempered_zeroDiagonal (Wfn : WightmanFunctions d) (
             simp [xs₁, a₁, A₁]; linarith [neg_abs_le (x 0 0)]
           have hfwd₁ : (fun k => wickRotatePoint (xs₁ k)) ∈ ForwardTube d 1 :=
             euclidean_ordered_in_forwardTube (fun k => xs₁ k)
-              (fun k j hkj => by fin_cases k <;> fin_cases j <;> simp_all [Fin.lt_iff_val_lt_val])
+              (fun k j hkj => by fin_cases k <;> fin_cases j <;> simp_all [Fin.lt_def])
               (fun k => by fin_cases k; exact hpos₁)
           have hxs₁_pet : (fun k => wickRotatePoint (xs₁ k)) ∈ PermutedExtendedTube d 1 :=
             euclidean_distinct_in_permutedTube xs₁

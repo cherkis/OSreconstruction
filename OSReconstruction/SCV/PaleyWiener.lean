@@ -1359,7 +1359,7 @@ private theorem integrable_one_add_abs_rpow_mul_norm
             apply mul_le_mul_of_nonneg_left _ (by positivity)
             by_cases hx : (1 : ℝ) ≤ |x|
             · simp [max_eq_right hx]
-            · push_neg at hx
+            · push Not at hx
               simp [max_eq_left hx.le]
     calc
       (1 + |x|) ^ n * ‖φ x‖ ≤ (2 : ℝ) ^ n * (1 + |x| ^ n) * ‖φ x‖ := by

@@ -167,7 +167,7 @@ theorem MvPolynomial.volume_zeroSet_eq_zero_proved (n : ℕ) :
     -- 2. Extract a nonzero coefficient
     obtain ⟨k, hk⟩ : ∃ k, q.coeff k ≠ 0 := by
       by_contra h
-      push_neg at h
+      push Not at h
       exact hq (Polynomial.ext (fun i => h i))
     let C := q.coeff k
 

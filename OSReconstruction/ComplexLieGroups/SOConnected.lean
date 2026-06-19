@@ -846,10 +846,10 @@ theorem reduceVector_full {m : ℕ}
           simpa [hassoc] using hR₂_col k
         by_cases h0k₁ : B 0 ^ 2 + B k₁ ^ 2 ≠ 0
         · exact ⟨0, k₁, fun h => hk₁0 h.symm, hk₁0, hvk₁, h0k₁, Or.inl rfl⟩
-        · push_neg at h0k₁
+        · push Not at h0k₁
           have hcnt2 : 1 < nonzeroBelowCount B := by
             by_contra hlt
-            push_neg at hlt
+            push Not at hlt
             have hcnt1 : nonzeroBelowCount B = 1 := by
               omega
             have huniq : ∀ l : Fin (m + 2), l ≠ 0 → l ≠ k₁ → B l = 0 := by
@@ -888,7 +888,7 @@ theorem reduceVector_full {m : ℕ}
           obtain ⟨_, hk₂0, hvk₂⟩ := hk₂_in
           by_cases h0k₂ : B 0 ^ 2 + B k₂ ^ 2 ≠ 0
           · exact ⟨0, k₂, fun h => hk₂0 h.symm, hk₂0, hvk₂, h0k₂, Or.inl rfl⟩
-          · push_neg at h0k₂
+          · push Not at h0k₂
             have hk₁k₂ : B k₁ ^ 2 + B k₂ ^ 2 ≠ 0 := by
               have hv0_ne : B 0 ^ 2 ≠ 0 := by
                 intro h0
@@ -954,7 +954,7 @@ theorem nonzero_pair_exists {m : ℕ} (hm : 2 ≤ m) (v : Fin m → ℂ)
     (hv : ∑ i : Fin m, v i ^ 2 = 1) :
     ∃ (i j : Fin m), i ≠ j ∧ v i ^ 2 + v j ^ 2 ≠ 0 := by
   by_contra h
-  push_neg at h
+  push Not at h
   -- All pairs have vᵢ² + vⱼ² = 0, so vⱼ² = -vᵢ² for all i ≠ j
   have hpair : ∀ i j : Fin m, i ≠ j → v j ^ 2 = -(v i ^ 2) := by
     intro i j hij; linear_combination h i j hij
@@ -1150,7 +1150,7 @@ private theorem column_reduce {m : ℕ} (A : SOComplex (m + 2)) :
     -- If count ≤ n, apply IH directly
     by_cases hle : cnt B ≤ n
     · exact ih B hle
-    push_neg at hle
+    push Not at hle
     -- count = n + 1; find k₁ ≠ 0 with B.val k₁ 0 ≠ 0
     obtain ⟨k₁, hk₁_mem⟩ := Finset.card_pos.mp (show 0 < cnt B by omega)
     rw [Finset.mem_filter] at hk₁_mem
@@ -1205,10 +1205,10 @@ private theorem column_reduce {m : ℕ} (A : SOComplex (m + 2)) :
     · -- Non-isotropic: (a, b) = (0, k₁)
       exact ⟨0, k₁, fun h => hk₁0 h.symm, hk₁0, hvk₁, h0k₁, Or.inl rfl⟩
     · -- Isotropic: v₀² + v_{k₁}² = 0
-      push_neg at h0k₁
+      push Not at h0k₁
       -- Count ≥ 2 (if count = 1, ∑ v² = v₀² + v_{k₁}² = 0 ≠ 1)
       have hcnt2 : 1 < cnt B := by
-        by_contra hlt; push_neg at hlt
+        by_contra hlt; push Not at hlt
         have hcnt1 : cnt B = 1 := by omega
         -- Only k₁ is nonzero below 0
         have huniq : ∀ l : Fin (m + 2), l ≠ 0 → l ≠ k₁ → B.val l 0 = 0 := by
@@ -1249,7 +1249,7 @@ private theorem column_reduce {m : ℕ} (A : SOComplex (m + 2)) :
       · -- (a, b) = (0, k₂)
         exact ⟨0, k₂, fun h => hk₂0 h.symm, hk₂0, hvk₂, h0k₂, Or.inl rfl⟩
       · -- Both isotropic: v_{k₁}² + v_{k₂}² ≠ 0
-        push_neg at h0k₂
+        push Not at h0k₂
         have hk₁k₂ : B.val k₁ 0 ^ 2 + B.val k₂ 0 ^ 2 ≠ 0 := by
           have hv0_ne : B.val 0 0 ^ 2 ≠ 0 := by
             intro h0; rw [sq, mul_self_eq_zero] at h0

@@ -449,7 +449,7 @@ theorem freeFieldForm_continuous (hm : 0 < m) :
         { toFun := fun g => (g : V → ℂ) k
           map_add' := fun _ _ => rfl
           map_smul' := fun _ _ => rfl }
-      apply Seminorm.cont_withSeminorms_normedSpace ℂ
+      apply WithSeminorms.continuous_normedSpace_rng ℂ
         (schwartz_withSeminorms ℝ V ℂ) eval_lm
       exact ⟨{(0, 0)}, 1, fun g => by
         simp only [eval_lm, Seminorm.comp_apply, coe_normSeminorm, Finset.sup_singleton,

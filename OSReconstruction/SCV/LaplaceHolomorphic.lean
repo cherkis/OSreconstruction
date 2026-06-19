@@ -103,7 +103,7 @@ theorem laplaceMeasure_nonneg_support (μ : Measure ℝ) [IsFiniteMeasure μ]
     simp only [Set.mem_preimage, Set.mem_Iio, negLogMap, neg_lt, neg_zero] at hs
     simp only [Set.mem_union, Set.mem_Ioi, Set.mem_Iic]
     by_contra h
-    push_neg at h
+    push Not at h
     obtain ⟨h1, h2⟩ := h
     have : Real.log s ≤ 0 := Real.log_nonpos h2.le h1
     linarith

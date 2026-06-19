@@ -90,7 +90,7 @@ theorem unitary_spectrum_circle (U : H →L[ℂ] H)
   intro z hz
   simp only [Metric.mem_sphere, dist_zero_right]
   by_contra hne
-  push_neg at hne
+  push Not at hne
   have h1 : ‖z‖ < 1 ∨ ‖z‖ > 1 := lt_or_gt_of_ne hne
   -- ‖U‖ ≤ 1 (since U*U = 1 implies U is an isometry)
   have hU_norm_le : ‖U‖ ≤ 1 := by
@@ -1157,7 +1157,7 @@ theorem bumpOperator_inner_mono (T : UnboundedOperator H) (hT : T.IsDenselyDefin
                   _ ≥ d + ε := le_abs_self _
                 linarith
               · left
-                push_neg at ht_pos
+                push Not at ht_pos
                 have ht_lt_neg_R : t < -R := by
                   have : |t| = -t := abs_of_neg ht_pos; linarith
                 have : t < c - ε := calc t < -R := ht_lt_neg_R
@@ -1175,7 +1175,7 @@ theorem bumpOperator_inner_mono (T : UnboundedOperator H) (hT : T.IsDenselyDefin
                   _ ≥ b + ε := le_abs_self _
                 linarith
               · left
-                push_neg at ht_pos
+                push Not at ht_pos
                 have ht_lt_neg_R : t < -R := by
                   have : |t| = -t := abs_of_neg ht_pos; linarith
                 have : t < a - ε := calc t < -R := ht_lt_neg_R
@@ -1188,7 +1188,7 @@ theorem bumpOperator_inner_mono (T : UnboundedOperator H) (hT : T.IsDenselyDefin
           rw [hindDiff_zero, Real.sqrt_zero, abs_zero]
           exact hε'
         · -- z = 1
-          push_neg at hz_ne1
+          push Not at hz_ne1
           simp only [hz_ne1, ne_eq, not_true_eq_false, not_false_eq_true, dif_neg]
           simp only [norm_zero]
           exact hε'
@@ -1251,7 +1251,7 @@ theorem bumpOperator_inner_mono (T : UnboundedOperator H) (hT : T.IsDenselyDefin
                 _ ≥ b + ε := le_abs_self _
               linarith
             · left
-              push_neg at ht_pos
+              push Not at ht_pos
               have ht_lt_neg_R : t < -R_ab := by
                 have : |t| = -t := abs_of_neg ht_pos; linarith
               have : t < a - ε := calc t < -R_ab := ht_lt_neg_R
@@ -1260,7 +1260,7 @@ theorem bumpOperator_inner_mono (T : UnboundedOperator H) (hT : T.IsDenselyDefin
               linarith
           rw [hind_zero, abs_zero]
           exact hε'
-        · push_neg at hz_ne1
+        · push Not at hz_ne1
           simp only [hz_ne1, ne_eq, not_true_eq_false, ↓reduceDIte, norm_zero]
           exact hε'
     · -- w ≠ 1: f is continuous on the open set {z | z ≠ 1}, so continuous at w
@@ -1322,7 +1322,7 @@ theorem bumpOperator_inner_mono (T : UnboundedOperator H) (hT : T.IsDenselyDefin
                 _ ≥ d + ε := le_abs_self _
               linarith
             · left
-              push_neg at ht_pos
+              push Not at ht_pos
               have ht_lt_neg_R : t < -R_cd := by
                 have : |t| = -t := abs_of_neg ht_pos; linarith
               have : t < c - ε := calc t < -R_cd := ht_lt_neg_R
@@ -1331,7 +1331,7 @@ theorem bumpOperator_inner_mono (T : UnboundedOperator H) (hT : T.IsDenselyDefin
               linarith
           rw [hind_zero, abs_zero]
           exact hε'
-        · push_neg at hz_ne1
+        · push Not at hz_ne1
           simp only [hz_ne1, ne_eq, not_true_eq_false, ↓reduceDIte, norm_zero]
           exact hε'
     · -- w ≠ 1: f is continuous on the open set {z | z ≠ 1}, so continuous at w
@@ -1548,7 +1548,7 @@ theorem bumpOperator_nonneg (T : UnboundedOperator H) (hT : T.IsDenselyDefined)
               exact le_of_lt h1
             · -- t < 0 and |t| > R means t < -R
               left
-              push_neg at ht_pos
+              push Not at ht_pos
               have ht_lt_neg_R : t < -R := by
                 have : |t| = -t := abs_of_neg ht_pos
                 linarith
@@ -1560,7 +1560,7 @@ theorem bumpOperator_nonneg (T : UnboundedOperator H) (hT : T.IsDenselyDefined)
           rw [hind_zero, Real.sqrt_zero]
           exact hε'
         · -- z = 1: ‖0‖ < ε'
-          push_neg at hz_ne1
+          push Not at hz_ne1
           rw [dif_neg (not_ne_iff.mpr hz_ne1)]
           simp only [norm_zero, hε']
       · -- At w ≠ 1: use continuity away from 1

@@ -343,7 +343,7 @@ theorem edge_of_the_wedge_1d (a b : ℝ) (hab : a < b)
             (hint z.re hz_mem 0 w.im hsub2)]
       linear_combination h_sub1 + h_sub2
     · -- NON-CROSSING: F holomorphic on open interior, direct Cauchy-Goursat
-      push_neg at hcross
+      push Not at hcross
       exact integral_boundary_rect_eq_zero_of_continuousOn_of_differentiableOn F z w
         (hFcont.mono hrect) (by
           intro c hc; rw [mem_reProdIm] at hc

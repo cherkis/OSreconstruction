@@ -1621,7 +1621,7 @@ theorem spectralProjection_norm_sq (U : H →L[ℂ] H) (hU : U ∈ unitary (H �
         by_cases hK : K ⊆ E ∧ IsClosed K
         · simp only [ciSup_pos hK.1, ciSup_pos hK.2]
           exact MeasureTheory.measure_mono (Set.subset_univ K)
-        · push_neg at hK
+        · push Not at hK
           by_cases hK1 : K ⊆ E
           · have hK2 := hK hK1
             simp only [ciSup_pos hK1]

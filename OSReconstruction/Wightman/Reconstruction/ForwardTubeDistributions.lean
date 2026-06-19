@@ -173,7 +173,7 @@ private theorem convex_inOpenForwardCone (d : ℕ) [NeZero d] :
       (fun i : Fin d => η (Fin.succ i)) (fun i : Fin d => η' (Fin.succ i))
     -- Sxy < η₀ * η'₀ (via Cauchy-Schwarz + spatial < time²)
     have h_Sxy : Sxy < η 0 * η' 0 := by
-      by_contra h; push_neg at h
+      by_contra h; push Not at h
       have := sq_le_sq' (by linarith [mul_pos hη0 hη'0]) h
       have h_Sx_nn : 0 ≤ Sx := Finset.sum_nonneg (fun i _ => sq_nonneg (η (Fin.succ i)))
       have h_Sy_nn : 0 ≤ Sy := Finset.sum_nonneg (fun i _ => sq_nonneg (η' (Fin.succ i)))

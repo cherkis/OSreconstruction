@@ -3739,7 +3739,7 @@ theorem scalar_dct_schwartz_pairing {m : ℕ}
               apply mul_le_mul_of_nonneg_left _ (by positivity)
               by_cases h : (1 : ℝ) ≤ ‖x‖
               · simp [max_eq_right h]
-              · push_neg at h
+              · push Not at h
                 simp [max_eq_left h.le]
       calc
         (1 + ‖x‖) ^ N * ‖f x‖ ≤ (2 : ℝ) ^ N * (1 + ‖x‖ ^ N) * ‖f x‖ := by
@@ -4170,7 +4170,7 @@ theorem fourierLaplace_boundaryValue_recovery {m : ℕ}
     -- Step 2: χ.val ξ ≠ 0 implies infDist ξ (DualConeFlat C) ≤ 1
     have hdist : Metric.infDist ξ (DualConeFlat C) ≤ 1 := by
       by_contra h
-      push_neg at h
+      push Not at h
       have := χ.support_bound ξ (by linarith)
       exact hχξ_ne (by simp [this])
     -- Step 3: Find ξ' ∈ DualConeFlat C with dist ξ ξ' < 2

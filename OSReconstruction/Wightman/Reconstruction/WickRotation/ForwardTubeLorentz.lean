@@ -1560,7 +1560,7 @@ theorem wickRotation_in_translatedPET_null {d n : ℕ} [NeZero d] :
   intro x hx
   simp only [Set.mem_setOf_eq] at hx ⊢
   by_contra hdist_all
-  push_neg at hdist_all
+  push Not at hdist_all
   -- hdist_all : ∀ i j, i ≠ j → x i 0 ≠ x j 0
   apply hx
   -- Goal: (fun k => wickRotatePoint (x k)) ∈ TranslatedPET d n

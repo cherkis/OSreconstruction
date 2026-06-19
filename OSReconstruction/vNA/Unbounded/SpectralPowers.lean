@@ -633,7 +633,7 @@ private lemma resolvent_function_norm (s : ℝ) :
       ring
     rw [← Complex.normSq_eq_norm_sq]; exact hns
   by_contra h
-  push_neg at h
+  push Not at h
   have h2 : ‖(s : ℂ) + Complex.I‖ ^ 2 < 1 ^ 2 :=
     sq_lt_sq' (by linarith [norm_nonneg ((s : ℂ) + Complex.I)]) h
   linarith [sq_nonneg s]
@@ -1284,7 +1284,7 @@ private lemma square_integrable_of_resolvent_preimage (T : UnboundedOperator H)
       simp [Complex.add_re, Complex.add_im, Complex.ofReal_re, Complex.ofReal_im,
             Complex.I_re, Complex.I_im]; ring
     have h2 : ‖(s : ℂ)‖ ^ 2 = s ^ 2 := by rw [Complex.norm_real]; exact sq_abs s
-    by_contra hlt; push_neg at hlt
+    by_contra hlt; push Not at hlt
     linarith [sq_lt_sq' (by linarith [norm_nonneg ((s : ℂ) + Complex.I)]) hlt]
   have h_hn_bound : ∀ n (s : ℝ), ‖h_n n s‖ ≤ 1 := by
     intro n s; simp only [h_n, f_n, g]
@@ -1656,7 +1656,7 @@ theorem mem_domain_iff_square_integrable (T : UnboundedOperator H) (hT : T.IsDen
           ⟨0, hs_sq_int.integrableOn⟩
         have h_inter : ⋂ N : ℕ, (Set.Icc (-(N : ℝ)) N)ᶜ = ∅ := by
           ext s; simp only [Set.mem_iInter, Set.mem_compl_iff, Set.mem_Icc,
-                             Set.mem_empty_iff_false, iff_false, not_forall]; push_neg
+                             Set.mem_empty_iff_false, iff_false, not_forall]; push Not
           exact ⟨⌈|s|⌉₊, ⟨by linarith [neg_abs_le s, Nat.le_ceil |s|],
                            by linarith [le_abs_self s, Nat.le_ceil |s|]⟩⟩
         rwa [h_inter, MeasureTheory.setIntegral_empty] at h_tend
@@ -2015,7 +2015,7 @@ theorem spectralTruncation_tendsto (T : UnboundedOperator H) (hT : T.IsDenselyDe
     have h2 : ‖(s : ℂ)‖ ^ 2 = s ^ 2 := by
       rw [Complex.norm_real]; exact sq_abs s
     by_contra hlt
-    push_neg at hlt
+    push Not at hlt
     have h3 : ‖(s : ℂ) + Complex.I‖ ^ 2 < ‖(s : ℂ)‖ ^ 2 :=
       sq_lt_sq' (by linarith [norm_nonneg ((s : ℂ) + Complex.I)]) hlt
     linarith

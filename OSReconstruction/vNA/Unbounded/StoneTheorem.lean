@@ -1307,7 +1307,7 @@ theorem generator_selfadjoint : 𝒰.generator.IsSelfAdjoint 𝒰.generator_dens
         A x - Complex.I • (x : H) = w := by
       intro w
       by_contra h_not_surj
-      push_neg at h_not_surj
+      push Not at h_not_surj
       -- Build ran(A-iI) as a submodule
       let S_sub : Submodule ℂ H := {
         carrier := Set.range (fun x : A.domain => A x - Complex.I • (x : H))

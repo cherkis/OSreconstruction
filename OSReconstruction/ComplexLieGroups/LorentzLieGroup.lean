@@ -537,7 +537,7 @@ theorem orthochronous_mul {Λ₁ Λ₂ : Matrix (Fin (d + 1)) (Fin (d + 1)) ℝ}
     rw [ge_iff_le, neg_le_iff_add_nonneg]
     by_cases hS : S ≥ 0
     · linarith [Real.sqrt_nonneg ((Λ₁ 0 0 ^ 2 - 1) * (Λ₂ 0 0 ^ 2 - 1))]
-    · push_neg at hS
+    · push Not at hS
       have hSneg : 0 ≤ -S := le_of_lt (neg_pos.mpr hS)
       have h1 : -S ≤ Real.sqrt ((Λ₁ 0 0 ^ 2 - 1) * (Λ₂ 0 0 ^ 2 - 1)) := by
         calc -S = Real.sqrt ((-S) ^ 2) := (Real.sqrt_sq hSneg).symm
@@ -901,7 +901,7 @@ theorem boost_zero_entry (k : Fin d) {Λ : Matrix (Fin (d + 1)) (Fin (d + 1)) �
   · obtain ⟨c, _, hfc⟩ := intermediate_value_Icc (Real.arcosh_nonneg ha) hf_cont.continuousOn
       ⟨hf0 ▸ hb, hfp⟩
     exact ⟨c, hfc⟩
-  · push_neg at hb
+  · push Not at hb
     obtain ⟨c, _, hfc⟩ := intermediate_value_Icc (neg_nonpos.mpr (Real.arcosh_nonneg ha))
       hf_cont.continuousOn ⟨hfn, hf0 ▸ hb.le⟩
     exact ⟨c, hfc⟩
@@ -1450,7 +1450,7 @@ private theorem spatial_givens_reduction
         · -- Column j was already processed. Use hprev_cols' from spatial_subdiag_zeroing.
           exact hprev_cols' j hjm' i hjlt
         · -- j.val = m (since j.val < m + 1 and j.val ≥ m)
-          push_neg at hjm'
+          push Not at hjm'
           have hjm_eq : j = ⟨m, hmd⟩ :=
             Fin.ext (Nat.le_antisymm (Nat.lt_succ_iff.mp hjm) hjm')
           subst hjm_eq
@@ -1481,7 +1481,7 @@ private theorem upper_triangular_orthogonal_to_diagonal
       intro i j hij
       by_cases h : j.val < i.val
       · exact hsubdiag i j h
-      · push_neg at h
+      · push Not at h
         have : i.val < j.val := lt_of_le_of_ne h (fun h' => hij (Fin.ext h'))
         exact above d le_rfl j j.isLt i this
     intro n hn
@@ -1493,7 +1493,7 @@ private theorem upper_triangular_orthogonal_to_diagonal
       by_cases hjm : j.val < m
       · exact ihm (by omega) j hjm i hi
       · -- j.val = m. Need to show Λ_{i+1,j+1} = 0 for i < j.
-        push_neg at hjm
+        push Not at hjm
         have hjm_eq : j.val = m := Nat.le_antisymm (Nat.lt_succ_iff.mp hj) hjm
         -- Use orthonormality: ∑_k Λ_{k+1,i+1} * Λ_{k+1,j+1} = 0 (since i ≠ j)
         have hij : i ≠ j := Fin.ne_of_val_ne (by omega)
@@ -1507,10 +1507,10 @@ private theorem upper_triangular_orthogonal_to_diagonal
           intro k hki
           by_cases hk_gt_j : j.val < k.val
           · rw [hsubdiag k j hk_gt_j]; ring
-          · push_neg at hk_gt_j
+          · push Not at hk_gt_j
             by_cases hk_gt_i : i.val < k.val
             · rw [hsubdiag k i hk_gt_i]; ring
-            · push_neg at hk_gt_i
+            · push Not at hk_gt_i
               have hk_lt_i : k.val < i.val :=
                 lt_of_le_of_ne hk_gt_i (fun h => hki (Fin.ext h))
               -- k < i < m, so above-diagonal in col i which was processed by IH
@@ -1531,7 +1531,7 @@ private theorem upper_triangular_orthogonal_to_diagonal
             intro k hki
             by_cases hk_gt : i.val < k.val
             · rw [hsubdiag k i hk_gt]; ring
-            · push_neg at hk_gt
+            · push Not at hk_gt
               have : k.val < i.val := lt_of_le_of_ne hk_gt (fun h => hki (Fin.ext h))
               rw [ihm (by omega) i (by omega) k this]; ring
           have hii_sum := horth i i
@@ -1790,7 +1790,7 @@ private theorem diagonal_sign_fixing
         -- For j ∉ {i₀, j₀}, the entry is unchanged
         have hother : ∀ j : Fin d, j ≠ i₀ → j ≠ j₀ →
             (S.val.val * Λ') j.succ j.succ = Λ' j.succ j.succ := by
-          intro j hni hnj; rw [hSΛ_diag_val, if_neg (by push_neg; exact ⟨hni, hnj⟩)]
+          intro j hni hnj; rw [hSΛ_diag_val, if_neg (by push Not; exact ⟨hni, hnj⟩)]
         -- The new negative set is a subset of (negS.erase i₀).erase j₀
         have hsub : Finset.univ.filter (fun j : Fin d => (S.val.val * Λ') j.succ j.succ = -1) ⊆
             (negS.erase i₀).erase j₀ := by

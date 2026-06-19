@@ -79,7 +79,7 @@ theorem schwartz_seminorm_tendsto_zero_of_vanish_on_ball_uniform
       by_cases hx : ‖x‖ ≤ (n : ℝ) + 1
       · simp [hvanish n x hx]
         exact div_nonneg hM_pos (sq_nonneg _)
-      · push_neg at hx
+      · push Not at hx
         have hn1_pos : (0 : ℝ) < (n : ℝ) + 1 := by positivity
         have hx_pos : 0 < ‖x‖ := lt_trans hn1_pos hx
         calc

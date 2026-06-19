@@ -103,7 +103,7 @@ theorem contraction_of_doubling_and_growth (N : ℝ → ℝ)
         rw [show 2 * (2 ^ n * t) = 2 ^ (n + 1) * t by ring] at hdb
         have hsq : 0 < N (2 ^ n * t) ^ 2 := by positivity
         by_contra h
-        push_neg at h
+        push Not at h
         have hnn := hD.nonneg (2 ^ (n + 1) * t) (by positivity)
         have hzero : N (2 ^ (n + 1) * t) = 0 := le_antisymm h hnn
         rw [hzero, mul_zero] at hdb

@@ -285,7 +285,7 @@ def toIntervalPremeasure : IntervalPremeasure where
       -- Because points 0 = a and points n = a, but strict_mono means points 0 < points n if n > 0
       have hn : P.n = 0 := by
         by_contra h
-        push_neg at h
+        push Not at h
         have h0 : 0 < P.n := Nat.pos_of_ne_zero h
         have hfirst := P.first
         have hlast := P.last

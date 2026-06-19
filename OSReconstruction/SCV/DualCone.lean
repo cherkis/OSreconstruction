@@ -146,7 +146,7 @@ theorem dualConeEucl_separates_of_not_mem_closure
   have hf_nonneg : ∀ a ∈ S, 0 ≤ f a := by
     intro a ha
     by_contra h_neg
-    push_neg at h_neg
+    push Not at h_neg
     -- Pick n large enough that (n+1)*f(a) < u (possible since f(a) < 0)
     have hfa_neg : f a < 0 := h_neg
     -- We need n+1 > u / f(a). Since f(a) < 0, u/f(a) could be any real.

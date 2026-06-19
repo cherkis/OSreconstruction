@@ -219,7 +219,7 @@ theorem jensen_bounded_continuous_at_zero {D : ℝ → ℝ} (hJ : SatisfiesJense
       rw [ht', hD_pow n (2^n * t), abs_div, abs_of_pos h2n_pos]
       exact div_le_div_of_nonneg_right hD_bound h2n_nonneg
     · -- t < 0: use D(-t) = -D(t)
-      push_neg at ht0
+      push Not at ht0
       have ht_neg : -t > 0 := by linarith
       have ht_neg_le : -t ≤ 1 / 2^n := by
         have h1 : |t| = -t := abs_of_neg ht0; linarith
@@ -311,7 +311,7 @@ theorem jensen_bounded_continuous {D : ℝ → ℝ} (hJ : SatisfiesJensen D) (hD
         calc |D r| ≤ 2^n * M := ih r hr'
           _ ≤ 2^n * 2 * M := by nlinarith
       · -- r ∈ (2^n, 2^{n+1}], so r/2 ∈ (2^{n-1}, 2^n]
-        push_neg at hr1
+        push Not at hr1
         have hr_half : r / 2 ∈ Set.Icc (0 : ℝ) (2^n) := by
           constructor
           · linarith [hr.1]
@@ -329,7 +329,7 @@ theorem jensen_bounded_continuous {D : ℝ → ℝ} (hJ : SatisfiesJensen D) (hD
     intro n r hr
     by_cases hr0 : 0 ≤ r
     · exact hD_bounded_nat n r ⟨hr0, hr.2⟩
-    · push_neg at hr0
+    · push Not at hr0
       have hr1 : -(2^n : ℝ) ≤ r := hr.1
       have hr2 : r ≤ 2^n := hr.2
       have hr' : -r ∈ Set.Icc (0 : ℝ) (2^n) := ⟨by linarith, by linarith⟩

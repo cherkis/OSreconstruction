@@ -148,7 +148,13 @@ theorem polyGrowth_temperedDistribution {m : ℕ}
     (fun φ ψ => by
       simp [A, mul_add, integral_add, hA_integrable φ, hA_integrable ψ])
     (fun a φ => by
-      simp [A, smul_eq_mul, mul_left_comm, integral_const_mul])
+      calc
+        ∫ x : Fin m → ℝ, F x * (a * φ x) = ∫ x : Fin m → ℝ, a * (F x * φ x) := by
+          apply integral_congr_ae
+          filter_upwards with x
+          ring
+        _ = a * ∫ x : Fin m → ℝ, F x * φ x := by
+          simpa using (integral_const_mul a (fun x : Fin m → ℝ => F x * φ x)))
     hbound, ?_⟩
   intro φ
   rfl
@@ -331,6 +337,7 @@ set_option maxHeartbeats 400000 in
 theorem hasDerivAt_tubeSlice_ray
     {C : Set (Fin m → ℝ)}
     {F : (Fin m → ℂ) → ℂ}
+  [IsScalarTower ℝ ℂ (Fin m → ℂ)]
     (hF_hol : DifferentiableOn ℂ F (SCV.TubeDomain C))
     (hF_cont : ContinuousOn F (SCV.TubeDomain C))
     (η : Fin m → ℝ) (hη : η ∈ C)
@@ -448,8 +455,9 @@ theorem hasDerivAt_tubeSlice_ray
     have hF_at : DifferentiableAt ℂ F (slice τ x) := by
       exact (hF_hol _ (hslice_mem hτ x)).differentiableAt
         ((SCV.tubeDomain_isOpen hC_open).mem_nhds (hslice_mem hτ x))
-    have hcomp :
-        HasDerivAt (fun s => F (slice s x)) (((fderiv ℂ F (slice τ x)).restrictScalars ℝ) vη) τ := by
+    have hcomp := by
+      haveI : IsScalarTower ℝ ℂ (Fin m → ℂ) := by
+        infer_instance
       simpa using
         (hF_at.hasFDerivAt.restrictScalars ℝ).comp_hasDerivAt τ hslice_deriv
     have hderiv :
@@ -696,7 +704,8 @@ theorem hasDerivAt_tubeSlice_ray
         Complex.ofRealCLM.comp (ContinuousLinearMap.proj i)
     have hA_apply : A η = uη := by
       ext i
-      simp [A, uη]
+      change Complex.ofReal ((ContinuousLinearMap.proj i) η) = (uη i)
+      simp [uη]
     have hG_line : ∀ x : Fin m → ℝ, HasLineDerivAt ℝ G (G' x) x η := by
       intro x
       have hsliceX :
@@ -709,8 +718,9 @@ theorem hasDerivAt_tubeSlice_ray
       have hF_at : DifferentiableAt ℂ F (slice τ₀ x) := by
         exact (hF_hol _ (hslice_mem hτ0 x)).differentiableAt
           ((SCV.tubeDomain_isOpen hC_open).mem_nhds (hslice_mem hτ0 x))
-      have hG_fderiv :
-          HasFDerivAt G (((fderiv ℂ F (slice τ₀ x)).restrictScalars ℝ).comp A) x := by
+      have hG_fderiv := by
+        haveI : IsScalarTower ℝ ℂ (Fin m → ℂ) := by
+          infer_instance
         simpa [G] using (hF_at.hasFDerivAt.restrictScalars ℝ).comp x hsliceX
       have hderiv_vec :
           (((fderiv ℂ F (slice τ₀ x)).restrictScalars ℝ).comp A) η = G' x := by
@@ -776,7 +786,8 @@ theorem hasDerivAt_tubeSlice_ray
           - ∫ x : Fin m → ℝ, G' x * φ x := by
       exact integral_bilinear_hasLineDerivAt_right_eq_neg_left_of_integrable
         (μ := (volume : Measure (Fin m → ℝ))) (B := ContinuousLinearMap.mul ℝ ℂ)
-        h_int_G'φ h_int_Gdφ h_int_Gφ hG_line hφ_line
+        h_int_G'φ h_int_Gdφ h_int_Gφ
+        (fun x _ => hG_line x) (fun x _ => hφ_line x)
     have hibp' :
         ∫ x : Fin m → ℝ, G' x * φ x =
           - ∫ x : Fin m → ℝ, G x * directionalDerivSchwartz η φ x := by
@@ -803,7 +814,8 @@ theorem hasDerivAt_tubeSlice_ray
         _ = I * ∫ x : Fin m → ℝ, G' x * φ x := by
             rw [show (fun x : Fin m → ℝ => (I * G' x) * φ x) =
                 fun x : Fin m → ℝ => I * (G' x * φ x) by
-                  funext x; ring, integral_const_mul]
+                  funext x; ring]
+            simpa using (integral_const_mul I (fun x : Fin m → ℝ => G' x * φ x))
     calc
       ∫ x : Fin m → ℝ, Fparam' τ₀ x * φ x
           = I * ∫ x : Fin m → ℝ, G' x * φ x := hcr_int
@@ -1024,6 +1036,11 @@ theorem cr_integration_identity
   -- Step 2: g has derivative g' at every τ > 0
   have hderiv : ∀ τ₀ : ℝ, 0 < τ₀ → HasDerivAt g (g' τ₀) τ₀ := by
     intro τ₀ hτ₀
+    letI : IsScalarTower ℝ ℂ (Fin m → ℂ) := by
+      refine ⟨?_⟩
+      intro r z f
+      ext i
+      simp [mul_assoc]
     exact hasDerivAt_tubeSlice_ray hF_hol hF_cont η hη hC_cone hC_open hC_bd hF_growth τ₀ hτ₀ φ
   -- Step 3: g' is continuous (hence interval integrable)
   have hg'_cont : ContinuousOn g' (Set.Ioi 0) :=
@@ -1049,7 +1066,15 @@ theorem cr_integration_identity
     rw [← hFTC]
     show ∫ τ in t₀..t, g' τ =
       -I * ∫ τ in t₀..t, tubeSlice F (τ • η) (directionalDerivSchwartz η φ)
-    simp only [g', intervalIntegral.integral_const_mul]
+    calc
+      ∫ τ in t₀..t, g' τ =
+          ∫ τ in t₀..t, -I * tubeSlice F (τ • η) (directionalDerivSchwartz η φ) := by
+            rfl
+      _ = -I * ∫ τ in t₀..t, tubeSlice F (τ • η) (directionalDerivSchwartz η φ) := by
+            exact
+              (intervalIntegral.integral_const_mul
+                (a := t₀) (b := t) (μ := volume) (-I)
+                (fun τ : ℝ => tubeSlice F (τ • η) (directionalDerivSchwartz η φ)))
   -- Step 7: Convert interval integral to set integral on Icc (using t₀ ≤ t)
   rw [key]
   congr 1

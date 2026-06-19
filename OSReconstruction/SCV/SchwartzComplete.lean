@@ -299,7 +299,7 @@ instance instCompleteSpace [CompleteSpace F] : CompleteSpace (SchwartzMap E F) :
         apply Set.Finite.subset (Set.finite_Iio p)
         intro j hj
         simp only [Set.mem_setOf_eq, not_forall, Set.mem_Iio] at hj ⊢
-        by_contra h; push_neg at h
+        by_contra h; push Not at h
         obtain ⟨y, hy⟩ := hj; apply hy
         have h1 := SchwartzMap.le_seminorm ℝ 0 p (w (j + K)) y
         simp only [pow_zero, one_mul] at h1
@@ -476,7 +476,7 @@ theorem tempered_equicontinuous_of_tendsto
     ⟨0, Finset.mem_range.mpr (by omega)⟩ (fun n => ‖T n f‖)), fun i => ?_⟩
   by_cases hi : N ≤ i
   · exact le_max_of_le_left (hN i hi)
-  · push_neg at hi
+  · push Not at hi
     exact le_max_of_le_right
       (Finset.le_sup' (fun n => ‖T n f‖) (Finset.mem_range.mpr (by omega)))
 
@@ -503,7 +503,7 @@ theorem tempered_apply_tendsto_zero_of_tendsto
       ⟨0, Finset.mem_range.mpr (by omega)⟩ (fun n => ‖T n f‖)), fun i => ?_⟩
     by_cases hi : N ≤ i
     · exact le_max_of_le_left (hN i hi)
-    · push_neg at hi
+    · push Not at hi
       exact le_max_of_le_right
         (Finset.le_sup' (fun n => ‖T n f‖) (Finset.mem_range.mpr (by omega)))
   obtain ⟨s, C, hCne, hbound⟩ := tempered_uniform_schwartz_bound hTbdd

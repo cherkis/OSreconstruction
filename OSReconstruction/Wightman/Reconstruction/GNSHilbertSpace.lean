@@ -2727,7 +2727,7 @@ private theorem partial_convolution_fourier_factorization_dir
       PiLp.continuousLinearEquiv_symm_apply, Pi.sub_apply, Pi.smul_apply,
       smul_eq_mul, ContinuousLinearEquiv.trans_apply,
       ContinuousLinearEquiv.symm_trans_apply, Finset.sum_apply,
-      EuclideanSpace.single_apply, PiLp.single_apply, Prod.mk.injEq]
+      PiLp.single_apply, PiLp.single_apply, Prod.mk.injEq]
     split_ifs <;> simp_all <;> ring
   simp_rw [h_shift]
   -- ─── 1-D Fourier inversion ────────────────────────────────────
@@ -3534,7 +3534,7 @@ theorem oneSidedSupport_implies_schwartz_vanishing
     have h2pix_neg := hψ (2 * Real.pi * x) (Function.mem_support.mpr hx)
     -- 2π * x < 0 and 2π > 0 implies x < 0
     by_contra h_nonneg
-    push_neg at h_nonneg
+    push Not at h_nonneg
     linarith [mul_nonneg (le_of_lt h2pi_pos) h_nonneg]
   -- === Step 3: Apply HasOneSidedFourierSupport to χ ===
   have h_zero := hsupp χ hχ_supp
@@ -4197,7 +4197,7 @@ private lemma scd_bochner_forwardCone_support
       rw [← norm_eq_zero]
       apply le_antisymm _ (norm_nonneg _)
       by_contra h_pos
-      push_neg at h_pos
+      push Not at h_pos
       set val := ∫ t : ℝ, @inner ℂ _ _ ψ (poincareActGNS Wfn
         (PoincareGroup.translation' ((t : ℝ) • y)) ψ) * (FTφ : ℝ → ℂ) t
       set L := ∫ t : ℝ, ‖(FTφ : ℝ → ℂ) t‖
@@ -4369,7 +4369,7 @@ private lemma scd_bochner_forwardCone_support
       by_cases hp0 : p 0 < 0
       · left; exact hp0
       · right
-        push_neg at hp0
+        push Not at hp0
         refine ⟨hp0, ?_⟩
         have h_decomp := MinkowskiSpace.minkowskiNormSq_decomp d p
         linarith
@@ -5013,7 +5013,7 @@ private theorem borchersConj_continuous {n : ℕ} :
       { toFun := SchwartzMap.conj
         map_add' := fun f g => by ext x; simp [SchwartzMap.conj_apply]
         map_smul' := fun c f => by ext x; simp [SchwartzMap.conj_apply] }
-    exact Seminorm.continuous_from_bounded
+    exact WithSeminorms.continuous_of_isBounded
       (schwartz_withSeminorms ℝ (NPointDomain d n) ℂ)
       (schwartz_withSeminorms ℝ (NPointDomain d n) ℂ)
       conjL (fun q => by

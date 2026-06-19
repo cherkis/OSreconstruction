@@ -492,7 +492,7 @@ theorem proj_decreasing_tendsto_meas (x : H) (E : ℕ → Set ℝ) (S : Set ℝ)
     · rintro ⟨hz0, hzS⟩
       rw [← hS_eq] at hzS
       simp only [Set.mem_iInter] at hzS
-      push_neg at hzS
+      push Not at hzS
       obtain ⟨m, hm⟩ := hzS
       haveI : DecidablePred (fun m => z ∉ E m) := Classical.decPred _
       have hexists : ∃ m, z ∉ E m := ⟨m, hm⟩
@@ -541,7 +541,7 @@ def distributionFunction (x : H) : SpectralDistribution where
     have hE_inter : ⋂ n, E n = Set.Iic t := by
       ext s; simp only [Set.mem_iInter, Set.mem_Iic, E]
       refine ⟨fun h => ?_, fun hs n => le_add_of_le_of_nonneg hs (by positivity)⟩
-      by_contra hst; push_neg at hst
+      by_contra hst; push Not at hst
       obtain ⟨n, hn⟩ := exists_nat_gt (1 / (s - t))
       have hpos : (0 : ℝ) < s - t := sub_pos.mpr hst
       have h1 : 1 < (↑n : ℝ) * (s - t) := by rwa [div_lt_iff₀ hpos] at hn
@@ -620,7 +620,7 @@ def distributionFunction (x : H) : SpectralDistribution where
     · intro a' ha'
       rw [Filter.eventually_atBot]
       have hexN : ∃ N : ℕ, f (-(↑N : ℝ)) < a' := by
-        by_contra h; push_neg at h
+        by_contra h; push Not at h
         exact absurd (ge_of_tendsto' hseq h) (not_le.mpr ha')
       obtain ⟨N, hN⟩ := hexN
       exact ⟨-(↑N : ℝ), fun s hs => lt_of_le_of_lt (f_mono hs) hN⟩
@@ -675,7 +675,7 @@ def distributionFunction (x : H) : SpectralDistribution where
     · intro a' ha'
       rw [Filter.eventually_atTop]
       have hexN : ∃ N : ℕ, a' < f ↑N := by
-        by_contra h; push_neg at h
+        by_contra h; push Not at h
         exact absurd (le_of_tendsto' hseq h) (not_le.mpr ha')
       obtain ⟨N, hN⟩ := hexN
       exact ⟨↑N, fun s hs => lt_of_lt_of_le hN (f_mono hs)⟩

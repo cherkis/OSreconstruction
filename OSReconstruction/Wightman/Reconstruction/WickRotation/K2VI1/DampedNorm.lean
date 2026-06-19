@@ -24,7 +24,7 @@ private theorem exists_uniform_norm_bound_of_tendsto_vi1DampedNorm_local
   intro n
   by_cases hn : N ≤ n
   · exact le_trans (hN n hn) (le_max_of_le_right (le_max_left _ _))
-  · push_neg at hn
+  · push Not at hn
     exact le_trans
       (Finset.le_sup' (fun k => ‖u k‖) (Finset.mem_range.mpr (by omega)))
       (le_max_of_le_right (le_max_of_le_right le_rfl))

@@ -245,7 +245,7 @@ theorem schwartzMap_polynomial_norm_integrable {m : ℕ}
             apply mul_le_mul_of_nonneg_left _ (by positivity)
             by_cases h : (1 : ℝ) ≤ ‖x‖
             · simp [max_eq_right h]
-            · push_neg at h
+            · push Not at h
               simp [max_eq_left h.le]
     calc (1 + ‖x‖) ^ N * ‖f x‖
         ≤ (2 : ℝ) ^ N * (1 + ‖x‖ ^ N) * ‖f x‖ := by

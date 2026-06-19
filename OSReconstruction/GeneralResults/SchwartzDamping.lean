@@ -257,7 +257,7 @@ private lemma norm_cexp_neg_eps_mul_sub_one_le
       _ ≤ ε * (|r| + M * Real.exp M) := by
           gcongr; exact le_add_of_nonneg_right (by positivity)
   · -- r < 0: -M ≤ r < 0, exp(-εr) > 1, |exp(-εr)-1| = exp(-εr)-1 ≤ εM·exp(M)
-    push_neg at hr0
+    push Not at hr0
     have harg_pos : 0 < -ε * r := by nlinarith
     have hsub_nonneg : 0 ≤ Real.exp (-ε * r) - 1 := by
       linarith [Real.one_le_exp harg_pos.le]

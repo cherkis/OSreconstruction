@@ -1511,7 +1511,7 @@ private lemma exists_openForwardCone_pairing_neg_of_not_mem_forwardMomentumCone
         · rw [MinkowskiSpace.minkowskiNormSq_decomp]
           simp [MinkowskiSpace.spatialNormSq, Fin.succ_ne_zero]
       · simp [euclideanDot, Fin.sum_univ_succ, hp0]
-    · push_neg at hp0
+    · push Not at hp0
       have hpσ : (p 0) ^ 2 < MinkowskiSpace.spatialNormSq d p := by
         have h_decomp := MinkowskiSpace.minkowskiNormSq_decomp d p
         linarith

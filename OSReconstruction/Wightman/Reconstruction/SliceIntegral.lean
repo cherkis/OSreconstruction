@@ -1820,7 +1820,7 @@ theorem hasCompactSupport_fiberwiseAntiderivRaw {n : ℕ}
     simpa [Metric.mem_closedBall, dist_eq_norm, not_le] using hvR
   have hhead_or_tail : R < ‖v 0‖ ∨ R < ‖Fin.tail v‖ := by
     by_contra hsplit
-    push_neg at hsplit
+    push Not at hsplit
     have hcoord : ∀ j : Fin (n + 1), ‖v j‖ ≤ R := by
       intro j
       refine Fin.cases ?_ ?_ j

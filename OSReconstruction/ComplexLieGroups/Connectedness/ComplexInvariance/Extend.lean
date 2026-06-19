@@ -140,7 +140,7 @@ theorem complex_lorentz_invariance (n : ℕ)
   have hTc_sub_U : Tᶜ ⊆ U := by
     intro Λ hΛ
     simp [hT_def, lorentzInvarianceSet] at hΛ
-    push_neg at hΛ
+    push Not at hΛ
     obtain ⟨w, hw, hΛw, _⟩ := hΛ
     exact ⟨w, hw, hΛw⟩
   -- === T is closed ===
@@ -148,7 +148,7 @@ theorem complex_lorentz_invariance (n : ℕ)
     rw [← isOpen_compl_iff, isOpen_iff_forall_mem_open]
     intro Λ₀ hΛ₀
     simp [hT_def, lorentzInvarianceSet] at hΛ₀
-    push_neg at hΛ₀
+    push Not at hΛ₀
     obtain ⟨w₀, hw₀, hΛ₀w₀, hne⟩ := hΛ₀
     have hV_open : IsOpen {Λ : ComplexLorentzGroup d |
         complexLorentzAction Λ w₀ ∈ ForwardTube d n} :=

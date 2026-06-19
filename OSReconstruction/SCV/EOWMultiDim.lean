@@ -88,7 +88,7 @@ lemma open_ball_contains_linIndep {m : ℕ} (_hm : 0 < m)
   have hε_exists : ∃ ε : ℝ, 0 < ε ∧ ε < ρ ∧ ε + S ≠ 0 := by
     by_cases h1 : ρ / 2 + S ≠ 0
     · exact ⟨ρ / 2, by positivity, by linarith, h1⟩
-    · push_neg at h1
+    · push Not at h1
       exact ⟨ρ / 3, by positivity, by linarith, by intro h2; linarith⟩
   obtain ⟨ε, hε_pos, hε_lt, hεS⟩ := hε_exists
   refine ⟨ε, hε_pos, hε_lt, ?_⟩

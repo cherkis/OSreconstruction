@@ -1160,7 +1160,7 @@ theorem differentiableOn_of_continuous_off_real_1d
       hV.sdiff (isClosed_eq Complex.continuous_im continuous_const)
     exact ((hf_holo z₀ this).differentiableAt (hopen.mem_nhds this)).differentiableWithinAt
   · -- z₀ is on the real line. Use Morera's theorem.
-    push_neg at hzim -- hzim : z₀.im = 0
+    push Not at hzim -- hzim : z₀.im = 0
     -- Find a ball around z₀ inside V
     obtain ⟨r, hr, hball⟩ := Metric.isOpen_iff.mp hV z₀ hz₀
     -- Prove DifferentiableOn on ball, then extract DifferentiableAt at z₀
@@ -1281,7 +1281,7 @@ theorem differentiableOn_of_continuous_off_real_1d
               (hint z.re hz_mem 0 w.im hsub2)]
         linear_combination h_sub1 + h_sub2
       · -- NON-CROSSING: f holomorphic on open interior, direct Cauchy-Goursat
-        push_neg at hcross
+        push Not at hcross
         exact integral_boundary_rect_eq_zero_of_continuousOn_of_differentiableOn f z w
           (hf_cont_ball.mono hrect) (by
           intro c hc; rw [mem_reProdIm] at hc
@@ -1354,7 +1354,7 @@ theorem holomorphic_extension_across_real {m : ℕ}
       intro w ⟨hwV, hwim⟩
       have hwim' : ¬w.im = 0 := hwim
       have hnotreal : ¬(∀ j, (Function.update z i w j).im = 0) := by
-        push_neg; exact ⟨i, by simp [Function.update_self, hwim']⟩
+        push Not; exact ⟨i, by simp [Function.update_self, hwim']⟩
       have hmem : Function.update z i w ∈ U \ {z | ∀ j, (z j).im = 0} :=
         ⟨hwV, hnotreal⟩
       have hopen := hU.sdiff hreal_closed

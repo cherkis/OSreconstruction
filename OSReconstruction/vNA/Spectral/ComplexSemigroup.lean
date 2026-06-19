@@ -165,7 +165,7 @@ private theorem specSemiFRe_continuousOn_Ici (z : ℂ) (hz : 0 < z.re) :
       simp only [specSemiFRe]
       split_ifs with h
       · simp; exact Real.rpow_nonneg (Set.mem_Ici.mp hu) z.re
-      · push_neg at h
+      · push Not at h
         rw [Real.norm_eq_abs, abs_mul]
         calc |Real.exp (z.re * Real.log u)| * |Real.cos (z.im * Real.log u)|
             ≤ |Real.exp (z.re * Real.log u)| * 1 := by
@@ -203,7 +203,7 @@ private theorem specSemiFIm_continuousOn_Ici (z : ℂ) (hz : 0 < z.re) :
       simp only [specSemiFIm]
       split_ifs with h
       · simp; exact Real.rpow_nonneg (Set.mem_Ici.mp hu) z.re
-      · push_neg at h
+      · push Not at h
         rw [Real.norm_eq_abs, abs_mul]
         calc |Real.exp (z.re * Real.log u)| * |Real.sin (z.im * Real.log u)|
             ≤ |Real.exp (z.re * Real.log u)| * 1 := by
@@ -698,7 +698,7 @@ theorem spectralSemigroupComplex_norm_le
             simp only [specSemiFRe, Real.norm_eq_abs]
             split_ifs with h
             · simp
-            · push_neg at h
+            · push Not at h
               calc |Real.exp (z.re * Real.log s) * Real.cos (z.im * Real.log s)|
                   ≤ |Real.exp (z.re * Real.log s)| * 1 := by
                     rw [abs_mul]; gcongr; exact Real.abs_cos_le_one _
@@ -714,7 +714,7 @@ theorem spectralSemigroupComplex_norm_le
             simp only [specSemiFIm, Real.norm_eq_abs]
             split_ifs with h
             · simp
-            · push_neg at h
+            · push Not at h
               calc |Real.exp (z.re * Real.log s) * Real.sin (z.im * Real.log s)|
                   ≤ |Real.exp (z.re * Real.log s)| * 1 := by
                     rw [abs_mul]; gcongr; exact Real.abs_sin_le_one _

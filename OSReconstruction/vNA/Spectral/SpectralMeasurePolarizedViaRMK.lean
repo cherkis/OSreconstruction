@@ -1040,7 +1040,7 @@ theorem spectralMeasurePolarized_smul_real (U : H →L[ℂ] H) (hU : U ∈ unita
             rw [h3]
             by_cases hpos : inner_wv ≥ 0
             · simp only [abs_of_nonneg hpos]; linarith
-            · push_neg at hpos
+            · push Not at hpos
               have hneg : inner_wv < 0 := hpos
               simp only [abs_of_neg hneg]; linarith
           have h2 : μw + μv + 2 * |inner_wv| ≤ μw + μv + 2 * Real.sqrt μw * Real.sqrt μv := by

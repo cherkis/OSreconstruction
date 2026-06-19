@@ -362,7 +362,7 @@ theorem functionalCalculus_tendsto_SOT (P : SpectralMeasure H)
     rw [h_eq]
     -- From ‖v‖² < ε², conclude ‖v‖ < ε (using nlinarith)
     by_contra h_not
-    push_neg at h_not -- ε ≤ ‖v‖
+    push Not at h_not -- ε ≤ ‖v‖
     have h_sq_ge : ε ^ 2 ≤ (‖functionalCalculus P (f n - flim) (hd_int n) (hd_bdd n) x‖ : ℝ) ^ 2 :=
       sq_le_sq' (by linarith) h_not
     have h_int_lt : ∫ t, ‖(f n - flim) t‖ ^ 2 ∂(P.diagonalMeasure x) < ε ^ 2 := by
